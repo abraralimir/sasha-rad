@@ -58,49 +58,47 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen">
-        <Sidebar>
-          <SidebarHeader>
-            <div className="flex items-center justify-between p-2">
-              <Logo />
-              <div className="md:hidden">
-                <SidebarTrigger />
-              </div>
+      <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center justify-between p-2">
+            <Logo />
+            <div className="md:hidden">
+              <SidebarTrigger />
             </div>
-          </SidebarHeader>
-          <SidebarContent className="p-0">
-            <FileExplorer 
-              project={project} 
-              activeFileId={activeFileId} 
-              onFileSelect={handleFileSelect} 
-            />
-          </SidebarContent>
-        </Sidebar>
-        <SidebarInset>
-          <div className="flex flex-col h-screen max-h-screen">
-            <header className="flex items-center gap-4 border-b p-2 h-14 shrink-0">
-              <SidebarTrigger className="hidden md:flex"/>
-              <h1 className="text-lg font-semibold font-headline flex-1">Portlet IDE</h1>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline">
-                    <Bot className="h-5 w-5 mr-2" />
-                    Sasha AI
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[500px] sm:w-[540px] p-0 flex flex-col border-l">
-                  <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
-                </SheetContent>
-              </Sheet>
-            </header>
-            <main className="flex-1 p-4 overflow-hidden">
-              <Card className="h-full w-full rounded-lg border overflow-hidden">
-                <CodeEditor file={activeFile} onContentChange={handleContentChange} />
-              </Card>
-            </main>
           </div>
-        </SidebarInset>
-      </div>
+        </SidebarHeader>
+        <SidebarContent className="p-0">
+          <FileExplorer 
+            project={project} 
+            activeFileId={activeFileId} 
+            onFileSelect={handleFileSelect} 
+          />
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <div className="flex flex-col h-screen max-h-screen">
+          <header className="flex items-center gap-4 border-b p-2 h-14 shrink-0">
+            <SidebarTrigger className="hidden md:flex"/>
+            <h1 className="text-lg font-semibold font-headline flex-1">Portlet IDE</h1>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline">
+                  <Bot className="h-5 w-5 mr-2" />
+                  Sasha AI
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[500px] sm:w-[540px] p-0 flex flex-col border-l">
+                <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
+              </SheetContent>
+            </Sheet>
+          </header>
+          <main className="flex-1 p-4 overflow-hidden">
+            <Card className="h-full w-full rounded-lg border overflow-hidden">
+              <CodeEditor file={activeFile} onContentChange={handleContentChange} />
+            </Card>
+          </main>
+        </div>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
