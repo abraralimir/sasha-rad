@@ -27,7 +27,7 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
   const [messages, setMessages] = React.useState<Message[]>([
     {
       sender: "bot",
-      content: "Hi! I'm Sasha, your AI portlet assistant. I can help you build and modify your project.\n\nWhat can we build today?\n\n- Ask me to build a feature (e.g., 'Make a feedback form with a 5-star rating').\n- Request a style change (e.g., 'Make all buttons orange').\n- Upload a UI image, a source file (.java, .jsp), or a .zip file of an entire project.",
+      content: "Hi! I'm Sasha, your AI portlet assistant. I can help you build and modify your project from a simple feature to a complete view.\n\nWhat can we build today?\n\n- **Request a feature**: 'Build a complete sign-up page' or 'Create a feedback form with a 5-star rating.'\n- **Upload a UI image**: I'll generate the JSP code to match the design.\n- **Upload a JSON file**: I can use it as a specification to generate a form.\n- **Upload a project**: Upload a .zip file to load your entire project and I can help you with it.",
     },
   ]);
   const [inputValue, setInputValue] = React.useState("");
