@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -16,7 +17,9 @@ import JSZip from 'jszip';
 import { handleUiToCode, handleProjectUpload } from "@/app/actions";
 import type { UiToCodeOutput } from "@/ai/flows/ui-to-code";
 import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+
+const CHAT_STORAGE_KEY = "sasha-chat-history";
 
 const initialMessages: Message[] = [
     {
@@ -33,6 +36,33 @@ export default function Home() {
   const [messages, setMessages] = React.useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [isHistoryLoaded, setIsHistoryLoaded] = React.useState(false);
+
+  // Load messages from localStorage on mount
+  React.useEffect(() => {
+    try {
+      const storedMessages = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (storedMessages) {
+        setMessages(JSON.parse(storedMessages));
+      }
+    } catch (error) {
+      console.error("Failed to load messages from local storage", error);
+      setMessages(initialMessages);
+    } finally {
+        setIsHistoryLoaded(true);
+    }
+  }, []);
+
+  // Save messages to localStorage whenever they change, but only after initial load
+  React.useEffect(() => {
+    if (isHistoryLoaded) {
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+      } catch (error) {
+        console.error("Failed to save messages to local storage", error);
+      }
+    }
+  }, [messages, isHistoryLoaded]);
   
   const handleFileSelect = (fileId: string) => {
     setActiveFileId(fileId);
@@ -69,6 +99,7 @@ export default function Home() {
   };
 
   const handleClearSession = () => {
+    localStorage.removeItem(CHAT_STORAGE_KEY);
     setMessages(initialMessages);
     toast({
       title: "Chat Cleared",
