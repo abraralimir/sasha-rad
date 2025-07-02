@@ -64,8 +64,8 @@ function FileTree({ items, activeFileId, onFileSelect, defaultOpen = false }: Fi
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start h-8 px-2 py-1 my-0.5",
-                activeFileId === item.id && "bg-primary/20 text-primary-foreground font-semibold"
+                "w-full justify-start h-8 px-2 py-1 my-0.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                activeFileId === item.id && "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
               )}
               onClick={() => onFileSelect(item.id)}
             >

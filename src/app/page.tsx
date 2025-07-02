@@ -18,6 +18,7 @@ import { handleUiToCode, handleProjectUpload } from "@/app/actions";
 import type { UiToCodeOutput } from "@/ai/flows/ui-to-code";
 import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const CHAT_STORAGE_KEY = "sasha-chat-history";
 
@@ -254,7 +255,7 @@ export default function Home() {
   if (isChatOpen) {
     return (
         <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
-            <SheetContent className="w-full p-0 flex flex-col sm:max-w-none">
+            <SheetContent className="w-full sm:w-full sm:max-w-none h-full p-0 flex flex-col">
                  <SheetHeader className="p-3 border-b flex-shrink-0">
                     <SheetTitle className="sr-only">Sasha AI</SheetTitle>
                     <SheetDescription className="sr-only">A friendly AI chat assistant to help you build and modify your portlet project.</SheetDescription>
@@ -312,6 +313,7 @@ export default function Home() {
                 <Bot className="h-5 w-5 mr-2" />
                 Sasha AI
               </Button>
+              <ThemeToggle />
             </div>
           </header>
           <main className="flex-1 p-4 overflow-hidden">
