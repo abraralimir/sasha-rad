@@ -56,21 +56,38 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
       try {
         const fileDataUri = reader.result as string;
         const result = await handleUiToCode({ fileDataUri });
-        
-        const viewJspPath = "MyStaticPortlet/src/main/webapp/WEB-INF/jsp/view.jsp";
-        onCodeUpdate(viewJspPath, result.code);
-        setMessages(prev => [...prev, { sender: 'bot', content: "I've updated view.jsp based on your upload. Take a look!" }]);
-        toast({ title: "Success", description: "view.jsp has been updated." });
+
+        // Display the message from the AI regardless of success or failure
+        if (result.message) {
+            setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
+        }
+
+        if (result.success && result.files) {
+            // Update files if the operation was successful
+            result.files.forEach(file => {
+                onCodeUpdate(file.path, file.content);
+            });
+            toast({ title: "Success", description: "Project files have been updated." });
+        } else if (!result.success) {
+            // Handle failure case, the message is already displayed
+            toast({ variant: "destructive", title: "Info", description: "Please see the message from Sasha for details." });
+        }
 
       } catch (error) {
         console.error(error);
-        setMessages(prev => [...prev, { sender: 'bot', content: "Sorry, I had trouble processing that file." }]);
-        toast({ variant: "destructive", title: "Error", description: "Could not generate code from file." });
+        const errorMessage = "Sorry, I encountered an unexpected error. The AI model might be busy. Please try again in a moment.";
+        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
+        toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred." });
       } finally {
         setIsLoading(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     };
+    reader.onerror = () => {
+        setIsLoading(false);
+        setMessages(prev => [...prev, { sender: 'bot', content: "Sorry, I couldn't read that file." }]);
+        toast({ variant: "destructive", title: "Error", description: "File could not be read." });
+    }
   };
 
   const handleSendMessage = async () => {
@@ -116,7 +133,7 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
                 </Avatar>
               )}
               <div className={cn("max-w-xs md:max-w-md p-3 rounded-lg", message.sender === 'user' ? "bg-primary text-primary-foreground" : "bg-muted")}>
-                <p className="text-sm">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               </div>
                {message.sender === 'user' && (
                 <Avatar className="h-8 w-8">
@@ -154,7 +171,7 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
             disabled={isLoading}
           />
           <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center gap-1">
-             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/json" disabled={isLoading} />
+             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/json,text/xml,.xml,.war,application/java-archive" disabled={isLoading} />
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isLoading} aria-label="Upload file">
               <Paperclip className="h-5 w-5" />
             </Button>
