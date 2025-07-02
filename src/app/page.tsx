@@ -8,6 +8,11 @@ import { FileExplorer } from "@/components/file-explorer";
 import { CodeEditor } from "@/components/code-editor";
 import { Chatbot } from "@/components/chatbot";
 import { Logo } from "@/components/logo";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
@@ -78,13 +83,23 @@ export default function Home() {
               <SidebarTrigger className="hidden md:flex"/>
               <h1 className="text-lg font-semibold font-headline">Portlet IDE</h1>
             </header>
-            <main className="flex-1 grid md:grid-cols-5 gap-4 p-4 overflow-hidden">
-              <Card className="md:col-span-3 h-full flex flex-col">
-                <CodeEditor file={activeFile} onContentChange={handleContentChange} />
-              </Card>
-              <Card className="md:col-span-2 h-full flex flex-col">
-                <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
-              </Card>
+            <main className="flex-1 p-4 overflow-hidden">
+              <ResizablePanelGroup
+                direction="horizontal"
+                className="h-full max-h-full rounded-lg border"
+              >
+                <ResizablePanel defaultSize={60} minSize={30}>
+                  <Card className="h-full flex flex-col rounded-none border-0 shadow-none">
+                    <CodeEditor file={activeFile} onContentChange={handleContentChange} />
+                  </Card>
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={40} minSize={30}>
+                  <Card className="h-full flex flex-col rounded-none border-0 shadow-none">
+                    <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
+                  </Card>
+                </ResizablePanel>
+              </ResizablePanelGroup>
             </main>
           </div>
         </SidebarInset>
