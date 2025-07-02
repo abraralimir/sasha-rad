@@ -26,7 +26,7 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
   const [messages, setMessages] = React.useState<Message[]>([
     {
       sender: "bot",
-      content: "Hi! I'm Sasha, your AI portlet assistant. How can I help you today? You can ask me to style elements, upload a UI design, or upload a .zip file of your project.",
+      content: "Hi! I'm Sasha, your AI portlet assistant. I can help you code, style elements, or analyze files. \n\nWhat can we build today? \n\n- Ask me to make changes (e.g., 'Make all buttons orange').\n- Upload a UI image, JSON, or source file for me to analyze.\n- Upload a .zip file to load an entire project.",
     },
   ]);
   const [inputValue, setInputValue] = React.useState("");
@@ -214,7 +214,7 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
             disabled={isLoading}
           />
           <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center gap-1">
-             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/json,text/xml,.xml,.war,application/java-archive,application/zip" disabled={isLoading} />
+             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/json,text/xml,.xml,.war,application/java-archive,application/zip,.java,.jsp" disabled={isLoading} />
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isLoading} aria-label="Upload file">
               <Paperclip className="h-5 w-5" />
             </Button>
