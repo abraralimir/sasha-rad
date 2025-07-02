@@ -223,7 +223,7 @@ export default function Home() {
   if (isChatOpen) {
     return (
         <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
-            <SheetContent className="w-full sm:w-full lg:w-3/4 xl:w-1/2 p-0 flex flex-col">
+            <SheetContent className="w-full p-0 flex flex-col sm:max-w-none">
                  <SheetHeader className="p-3 border-b flex-shrink-0">
                     <SheetTitle className="sr-only">Sasha AI</SheetTitle>
                     <SheetDescription className="sr-only">A friendly AI chat assistant to help you build and modify your portlet project.</SheetDescription>
