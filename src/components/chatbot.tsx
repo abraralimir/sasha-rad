@@ -6,32 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Paperclip, Send, Bot, User, Loader2, Wand2 } from "lucide-react";
-import { handleUiToCode, handleProjectUpload } from "@/app/actions";
-import type { UiToCodeOutput } from "@/ai/flows/ui-to-code";
-import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
-import type { PortletFolder } from "@/lib/portlet-data";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import type { UiToCodeOutput } from "@/ai/flows/ui-to-code";
+import { CodeSnippet } from "@/components/code-snippet";
 
-interface ChatbotProps {
-  onCodeUpdate: (filePath: string, newContent: string) => void;
-  onProjectUpdate: (project: PortletFolder) => void;
-}
-
-type Message = {
+export type Message = {
   sender: "user" | "bot";
   content: string;
+  files?: UiToCodeOutput['files'];
 };
 
-export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
-  const [messages, setMessages] = React.useState<Message[]>([
-    {
-      sender: "bot",
-      content: "Hi! I'm Sasha, your AI portlet assistant. I can help you build and modify your project from a simple feature to a complete view.\n\nWhat can we build today?\n\n- **Request a feature**: 'Build a complete sign-up page' or 'Create a feedback form with a 5-star rating.'\n- **Upload a UI image**: I'll generate the JSP code to match the design.\n- **Upload a JSON file**: I can use it as a specification to generate a form.\n- **Upload a project**: Upload a .zip file to load your entire project and I can help you with it.",
-    },
-  ]);
+interface ChatbotProps {
+  messages: Message[];
+  isLoading: boolean;
+  onSendMessage: (message: string) => Promise<void>;
+  onFileUpload: (file: File) => Promise<void>;
+}
+
+export function Chatbot({ messages, isLoading, onSendMessage, onFileUpload }: ChatbotProps) {
   const [inputValue, setInputValue] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -45,117 +39,19 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
     }
   }, [messages]);
 
-  const processGenericUpload = async (file: File) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      try {
-        const fileDataUri = reader.result as string;
-        const result = await handleUiToCode({ fileDataUri });
 
-        if (result.message) {
-            setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
-        }
-        if (result.success && result.files) {
-            result.files.forEach(file => onCodeUpdate(file.path, file.content));
-            toast({ title: "Success", description: "Project files have been updated." });
-        } else if (!result.success && result.message) {
-            toast({ variant: "destructive", title: "Info", description: result.message });
-        }
-      } catch (error) {
-        console.error(error);
-        const errorMessage = "Sorry, I encountered an unexpected error. The AI model might be busy. Please try again in a moment.";
-        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
-        toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred." });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    reader.onerror = () => {
-        setIsLoading(false);
-        setMessages(prev => [...prev, { sender: 'bot', content: "Sorry, I couldn't read that file." }]);
-        toast({ variant: "destructive", title: "Error", description: "File could not be read." });
-    }
-  };
-
-  const processZipUpload = async (file: File) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      try {
-        const zipFileDataUri = reader.result as string;
-        const result: UnzipProjectOutput = await handleProjectUpload({ zipFileDataUri });
-
-        if (result.message) {
-            setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
-        }
-        if (result.success && result.project) {
-            onProjectUpdate(result.project);
-            toast({ title: "Success", description: "Project loaded from zip file." });
-        } else if (!result.success) {
-            toast({ variant: "destructive", title: "Error", description: "Could not process zip file." });
-        }
-      } catch (error) {
-        console.error(error);
-        const errorMessage = "An unexpected error occurred while processing the zip file.";
-        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
-        toast({ variant: "destructive", title: "Error", description: "Failed to process zip file." });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-     reader.onerror = () => {
-        setIsLoading(false);
-        setMessages(prev => [...prev, { sender: 'bot', content: "Sorry, I couldn't read that file." }]);
-        toast({ variant: "destructive", title: "Error", description: "File could not be read." });
-    }
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUploadEvent = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    setIsLoading(true);
-    setMessages(prev => [...prev, { sender: 'user', content: `Uploaded ${file.name}` }]);
-
-    if (file.type === 'application/zip' || file.name.endsWith('.zip')) {
-        await processZipUpload(file);
-    } else {
-        await processGenericUpload(file);
-    }
-
+    
+    await onFileUpload(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-    const userMessage = inputValue;
-    setMessages(prev => [...prev, { sender: 'user', content: userMessage }]);
+  const handleSendMessageEvent = async () => {
+    const messageToSend = inputValue;
     setInputValue("");
-    setIsLoading(true);
-
-    try {
-      const result: UiToCodeOutput = await handleUiToCode({ prompt: userMessage });
-      
-      if (result.message) {
-        setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
-      }
-
-      if (result.success && result.files && result.files.length > 0) {
-        result.files.forEach(file => onCodeUpdate(file.path, file.content));
-        toast({ title: "Success", description: "Project files have been updated." });
-      } else if (!result.success && result.message) {
-         toast({ variant: "destructive", title: "Info", description: result.message });
-      }
-
-    } catch (error) {
-      console.error(error);
-      const errorMessage = "An unexpected network error occurred. Please check your connection and try again.";
-      setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
-      toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred." });
-    } finally {
-      setIsLoading(false);
-    }
+    await onSendMessage(messageToSend);
   };
 
   return (
@@ -177,8 +73,15 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
                   <AvatarFallback>AI</AvatarFallback>
                 </Avatar>
               )}
-              <div className={cn("max-w-xs md:max-w-md p-3 rounded-lg", message.sender === 'user' ? "bg-primary text-primary-foreground" : "bg-muted")}>
+              <div className={cn("max-w-xs md:max-w-md rounded-lg", message.sender === 'user' ? "bg-primary text-primary-foreground p-3" : "w-full")}>
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                {message.files && message.files.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {message.files.map((file) => (
+                        <CodeSnippet key={file.path} filePath={file.path} code={file.content} />
+                    ))}
+                  </div>
+                )}
               </div>
                {message.sender === 'user' && (
                 <Avatar className="h-8 w-8">
@@ -210,17 +113,17 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
             onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    handleSendMessage();
+                    handleSendMessageEvent();
                 }
             }}
             disabled={isLoading}
           />
           <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center gap-1">
-             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/json,text/xml,.xml,.war,application/java-archive,application/zip,.java,.jsp" disabled={isLoading} />
+             <input type="file" ref={fileInputRef} onChange={handleFileUploadEvent} className="hidden" accept="image/*,application/json,text/xml,.xml,.war,application/java-archive,application/zip,.java,.jsp" disabled={isLoading} />
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isLoading} aria-label="Upload file">
               <Paperclip className="h-5 w-5" />
             </Button>
-            <Button size="icon" onClick={handleSendMessage} disabled={isLoading || !inputValue.trim()} aria-label="Send message">
+            <Button size="icon" onClick={handleSendMessageEvent} disabled={isLoading || !inputValue.trim()} aria-label="Send message">
               <Send className="h-5 w-5" />
             </Button>
           </div>
