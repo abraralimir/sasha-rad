@@ -8,11 +8,10 @@ import { FileExplorer } from "@/components/file-explorer";
 import { CodeEditor } from "@/components/code-editor";
 import { Chatbot } from "@/components/chatbot";
 import { Logo } from "@/components/logo";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Bot } from "lucide-react";
+
 
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
@@ -79,27 +78,25 @@ export default function Home() {
         </Sidebar>
         <SidebarInset>
           <div className="flex flex-col h-screen max-h-screen">
-            <header className="flex items-center gap-2 border-b p-2 h-14">
+            <header className="flex items-center gap-4 border-b p-2 h-14 shrink-0">
               <SidebarTrigger className="hidden md:flex"/>
-              <h1 className="text-lg font-semibold font-headline">Portlet IDE</h1>
+              <h1 className="text-lg font-semibold font-headline flex-1">Portlet IDE</h1>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline">
+                    <Bot className="h-5 w-5 mr-2" />
+                    Sasha AI
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[500px] sm:w-[540px] p-0 flex flex-col border-l">
+                  <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
+                </SheetContent>
+              </Sheet>
             </header>
             <main className="flex-1 p-4 overflow-hidden">
-              <ResizablePanelGroup
-                direction="horizontal"
-                className="h-full max-h-full rounded-lg border"
-              >
-                <ResizablePanel defaultSize={60} minSize={30}>
-                  <Card className="h-full flex flex-col rounded-none border-0 shadow-none">
-                    <CodeEditor file={activeFile} onContentChange={handleContentChange} />
-                  </Card>
-                </ResizablePanel>
-                <ResizableHandle withHandle />
-                <ResizablePanel defaultSize={40} minSize={30}>
-                  <Card className="h-full flex flex-col rounded-none border-0 shadow-none">
-                    <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
-                  </Card>
-                </ResizablePanel>
-              </ResizablePanelGroup>
+              <Card className="h-full w-full rounded-lg border overflow-hidden">
+                <CodeEditor file={activeFile} onContentChange={handleContentChange} />
+              </Card>
             </main>
           </div>
         </SidebarInset>
