@@ -529,3 +529,5 @@ export function updateFileContent(node: PortletFolder, id: string, content: stri
     
     return newProject;
 }
+
+    
