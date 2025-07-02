@@ -8,7 +8,7 @@ import { FileExplorer } from "@/components/file-explorer";
 import { CodeEditor } from "@/components/code-editor";
 import { Chatbot } from "@/components/chatbot";
 import { Logo } from "@/components/logo";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 
@@ -88,6 +88,12 @@ export default function Home() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[500px] sm:w-[540px] p-0 flex flex-col border-l">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Sasha AI</SheetTitle>
+                  <SheetDescription>
+                    Your AI-powered portlet development assistant. Ask questions, upload files, or request code changes.
+                  </SheetDescription>
+                </SheetHeader>
                 <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
               </SheetContent>
             </Sheet>
