@@ -2,6 +2,7 @@
 
 import { uiToCode, UiToCodeInput, UiToCodeOutput } from "@/ai/flows/ui-to-code";
 import { generateCssStyles } from "@/ai/flows/generate-css-styles";
+import { unzipProject, UnzipProjectInput, UnzipProjectOutput } from "@/ai/flows/unzip-project";
 import { z } from "zod";
 
 export async function handleUiToCode(input: UiToCodeInput): Promise<UiToCodeOutput> {
@@ -50,5 +51,18 @@ export async function handleGenerateCss(input: z.infer<typeof GenerateCssStylesC
             success: false,
             message: "I had some trouble with that request. Could you try rephrasing?"
         }
+    }
+}
+
+export async function handleProjectUpload(input: UnzipProjectInput): Promise<UnzipProjectOutput> {
+    try {
+        const result = await unzipProject(input);
+        return result;
+    } catch (error) {
+        console.error("Error in handleProjectUpload:", error);
+        return {
+            success: false,
+            message: "Sorry, I couldn't process that zip file. It might be corrupted or in an unsupported format. Please try again.",
+        };
     }
 }

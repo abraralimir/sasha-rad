@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Paperclip, Send, Bot, User, Loader2, Wand2 } from "lucide-react";
-import { handleUiToCode, handleGenerateCss, type GenerateCssClientOutput } from "@/app/actions";
+import { handleUiToCode, handleGenerateCss, handleProjectUpload, type GenerateCssClientOutput } from "@/app/actions";
+import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
+import type { PortletFolder } from "@/lib/portlet-data";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface ChatbotProps {
   onCodeUpdate: (filePath: string, newContent: string) => void;
+  onProjectUpdate: (project: PortletFolder) => void;
 }
 
 type Message = {
@@ -19,11 +22,11 @@ type Message = {
   content: string;
 };
 
-export function Chatbot({ onCodeUpdate }: ChatbotProps) {
+export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
   const [messages, setMessages] = React.useState<Message[]>([
     {
       sender: "bot",
-      content: "Hi! I'm Sasha, your AI portlet assistant. How can I help you today? You can ask me to style elements or upload a UI design.",
+      content: "Hi! I'm Sasha, your AI portlet assistant. How can I help you today? You can ask me to style elements, upload a UI design, or upload a .zip file of your project.",
     },
   ]);
   const [inputValue, setInputValue] = React.useState("");
@@ -33,7 +36,6 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    // Scroll to bottom when new messages are added
     if (scrollAreaRef.current) {
         const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
         if(viewport) {
@@ -42,6 +44,71 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
     }
   }, [messages]);
 
+  const processGenericUpload = async (file: File) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      try {
+        const fileDataUri = reader.result as string;
+        const result = await handleUiToCode({ fileDataUri });
+
+        if (result.message) {
+            setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
+        }
+        if (result.success && result.files) {
+            result.files.forEach(file => onCodeUpdate(file.path, file.content));
+            toast({ title: "Success", description: "Project files have been updated." });
+        } else if (!result.success) {
+            toast({ variant: "destructive", title: "Info", description: "Please see the message from Sasha for details." });
+        }
+      } catch (error) {
+        console.error(error);
+        const errorMessage = "Sorry, I encountered an unexpected error. The AI model might be busy. Please try again in a moment.";
+        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
+        toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    reader.onerror = () => {
+        setIsLoading(false);
+        setMessages(prev => [...prev, { sender: 'bot', content: "Sorry, I couldn't read that file." }]);
+        toast({ variant: "destructive", title: "Error", description: "File could not be read." });
+    }
+  };
+
+  const processZipUpload = async (file: File) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      try {
+        const zipFileDataUri = reader.result as string;
+        const result: UnzipProjectOutput = await handleProjectUpload({ zipFileDataUri });
+
+        if (result.message) {
+            setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
+        }
+        if (result.success && result.project) {
+            onProjectUpdate(result.project);
+            toast({ title: "Success", description: "Project loaded from zip file." });
+        } else if (!result.success) {
+            toast({ variant: "destructive", title: "Error", description: "Could not process zip file." });
+        }
+      } catch (error) {
+        console.error(error);
+        const errorMessage = "An unexpected error occurred while processing the zip file.";
+        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
+        toast({ variant: "destructive", title: "Error", description: "Failed to process zip file." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+     reader.onerror = () => {
+        setIsLoading(false);
+        setMessages(prev => [...prev, { sender: 'bot', content: "Sorry, I couldn't read that file." }]);
+        toast({ variant: "destructive", title: "Error", description: "File could not be read." });
+    }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,44 +117,13 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
     setIsLoading(true);
     setMessages(prev => [...prev, { sender: 'user', content: `Uploaded ${file.name}` }]);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      try {
-        const fileDataUri = reader.result as string;
-        const result = await handleUiToCode({ fileDataUri });
-
-        // Display the message from the AI regardless of success or failure
-        if (result.message) {
-            setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
-        }
-
-        if (result.success && result.files) {
-            // Update files if the operation was successful
-            result.files.forEach(file => {
-                onCodeUpdate(file.path, file.content);
-            });
-            toast({ title: "Success", description: "Project files have been updated." });
-        } else if (!result.success) {
-            // Handle failure case, the message is already displayed
-            toast({ variant: "destructive", title: "Info", description: "Please see the message from Sasha for details." });
-        }
-
-      } catch (error) {
-        console.error(error);
-        const errorMessage = "Sorry, I encountered an unexpected error. The AI model might be busy. Please try again in a moment.";
-        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
-        toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred." });
-      } finally {
-        setIsLoading(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      }
-    };
-    reader.onerror = () => {
-        setIsLoading(false);
-        setMessages(prev => [...prev, { sender: 'bot', content: "Sorry, I couldn't read that file." }]);
-        toast({ variant: "destructive", title: "Error", description: "File could not be read." });
+    if (file.type === 'application/zip' || file.name.endsWith('.zip')) {
+        await processZipUpload(file);
+    } else {
+        await processGenericUpload(file);
     }
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSendMessage = async () => {
@@ -178,7 +214,7 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
             disabled={isLoading}
           />
           <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center gap-1">
-             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/json,text/xml,.xml,.war,application/java-archive" disabled={isLoading} />
+             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/json,text/xml,.xml,.war,application/java-archive,application/zip" disabled={isLoading} />
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isLoading} aria-label="Upload file">
               <Paperclip className="h-5 w-5" />
             </Button>

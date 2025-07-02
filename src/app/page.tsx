@@ -44,6 +44,11 @@ export default function Home() {
     setProject(updatedProject);
     setActiveFileId(fileId);
   };
+
+  const handleProjectUpdate = (newProject: PortletFolder) => {
+    setProject(newProject);
+    setActiveFileId(null); // Deselect any active file
+  };
   
   const activeFile = activeFileId ? findFileById(project, activeFileId) : null;
 
@@ -78,7 +83,7 @@ export default function Home() {
                 <CodeEditor file={activeFile} onContentChange={handleContentChange} />
               </Card>
               <Card className="md:col-span-2 h-full flex flex-col">
-                <Chatbot onCodeUpdate={handleSashaCodeUpdate} />
+                <Chatbot onCodeUpdate={handleSashaCodeUpdate} onProjectUpdate={handleProjectUpdate} />
               </Card>
             </main>
           </div>
