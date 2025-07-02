@@ -74,7 +74,7 @@ export function Chatbot({ messages, isLoading, onSendMessage, onFileUpload, onCl
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div className="space-y-4">
           {messages.map((message, index) => (
-            <div key={index} className={cn("flex items-start gap-3", message.sender === 'user' ? 'justify-end' : 'justify-start')}>
+            <div key={index} className={cn("flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2", message.sender === 'user' ? 'justify-end' : 'justify-start')}>
               {message.sender === 'bot' && (
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="https://placehold.co/32x32/6699CC/FFFFFF.png" alt="Sasha AI" data-ai-hint="robot" />

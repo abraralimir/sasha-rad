@@ -9,13 +9,14 @@ import { CodeEditor } from "@/components/code-editor";
 import { Chatbot, type Message } from "@/components/chatbot";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { Bot, Download, Trash2 } from "lucide-react";
+import { Bot, Download, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { handleUiToCode, handleProjectUpload } from "@/app/actions";
 import type { UiToCodeOutput } from "@/ai/flows/ui-to-code";
 import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const initialMessages: Message[] = [
     {
@@ -126,8 +127,10 @@ export default function Home() {
       setMessages(prev => [...prev, { sender: 'bot', content: result.message, files: result.files }]);
 
       if (result.success && result.files && result.files.length > 0) {
-        result.files.forEach(file => handleSashaCodeUpdate(file.path, file.content));
-        toast({ title: "Success", description: "Project files have been updated." });
+        if (result.shouldApplyChanges) {
+          result.files.forEach(file => handleSashaCodeUpdate(file.path, file.content));
+          toast({ title: "Success", description: "Project files have been updated." });
+        }
       } else if (!result.success && result.message) {
          toast({ variant: "destructive", title: "Info", description: result.message });
       }
@@ -152,7 +155,7 @@ export default function Home() {
 
         setMessages(prev => [...prev, { sender: 'bot', content: result.message, files: result.files }]);
 
-        if (result.success && result.files) {
+        if (result.success && result.files && result.shouldApplyChanges) {
             result.files.forEach(file => handleSashaCodeUpdate(file.path, file.content));
             toast({ title: "Success", description: "Project files have been updated." });
         } else if (!result.success && result.message) {
@@ -219,13 +222,21 @@ export default function Home() {
 
   if (isChatOpen) {
     return (
-      <Chatbot 
-        messages={messages}
-        isLoading={isLoading}
-        onSendMessage={handleSendMessage}
-        onFileUpload={handleFileUpload}
-        onClose={() => setIsChatOpen(false)}
-      />
+        <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
+            <SheetContent className="w-full sm:w-full lg:w-3/4 xl:w-1/2 p-0 flex flex-col">
+                 <SheetHeader className="p-3 border-b flex-shrink-0">
+                    <SheetTitle className="sr-only">Sasha AI</SheetTitle>
+                    <SheetDescription className="sr-only">A friendly AI chat assistant to help you build and modify your portlet project.</SheetDescription>
+                </SheetHeader>
+                 <Chatbot 
+                    messages={messages}
+                    isLoading={isLoading}
+                    onSendMessage={handleSendMessage}
+                    onFileUpload={handleFileUpload}
+                    onClose={() => setIsChatOpen(false)}
+                />
+            </SheetContent>
+        </Sheet>
     );
   }
 
