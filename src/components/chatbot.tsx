@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Paperclip, Send, Bot, User, Loader2, Wand2 } from "lucide-react";
-import { handleUiToCode, handleGenerateCss } from "@/app/actions";
+import { handleUiToCode, handleGenerateCss, type GenerateCssClientOutput } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -98,16 +98,23 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
     setIsLoading(true);
 
     try {
-      // Simplified logic: assume any message is a style request
-      const result = await handleGenerateCss({ prompt: userMessage });
-      const cssPath = "MyStaticPortlet/src/main/webapp/css/styles.css";
-      onCodeUpdate(cssPath, result.cssStyles);
-      setMessages(prev => [...prev, { sender: 'bot', content: "I've analyzed your request and updated styles.css with new styles." }]);
-      toast({ title: "Success", description: "styles.css has been updated." });
+      const result: GenerateCssClientOutput = await handleGenerateCss({ prompt: userMessage });
+      
+      if (result.success && result.cssStyles) {
+        const cssPath = "MyStaticPortlet/src/main/webapp/css/styles.css";
+        onCodeUpdate(cssPath, result.cssStyles);
+        setMessages(prev => [...prev, { sender: 'bot', content: "I've analyzed your request and updated styles.css with new styles." }]);
+        toast({ title: "Success", description: "styles.css has been updated." });
+      } else {
+        const errorMessage = result.message || "I had some trouble with that request. Could you try rephrasing?";
+        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
+        toast({ variant: "destructive", title: "Error", description: "Could not generate CSS styles." });
+      }
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { sender: 'bot', content: "I had some trouble with that request. Could you try rephrasing?" }]);
-      toast({ variant: "destructive", title: "Error", description: "Could not generate CSS styles." });
+      const errorMessage = "An unexpected network error occurred. Please check your connection and try again.";
+      setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
+      toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred." });
     } finally {
       setIsLoading(false);
     }

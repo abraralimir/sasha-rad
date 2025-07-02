@@ -1,7 +1,7 @@
 "use server";
 
 import { uiToCode, UiToCodeInput, UiToCodeOutput } from "@/ai/flows/ui-to-code";
-import { generateCssStyles, GenerateCssStylesOutput } from "@/ai/flows/generate-css-styles";
+import { generateCssStyles } from "@/ai/flows/generate-css-styles";
 import { z } from "zod";
 
 export async function handleUiToCode(input: UiToCodeInput): Promise<UiToCodeOutput> {
@@ -11,7 +11,10 @@ export async function handleUiToCode(input: UiToCodeInput): Promise<UiToCodeOutp
     return result;
   } catch (error) {
     console.error("Error in handleUiToCode:", error);
-    throw new Error("Failed to generate code from UI.");
+    return {
+      success: false,
+      message: "Sorry, I couldn't process that file. The AI model might be busy or the file format isn't supported. Please try again.",
+    };
   }
 }
 
@@ -19,7 +22,14 @@ const GenerateCssStylesClientInputSchema = z.object({
     prompt: z.string().min(10, "Prompt must be at least 10 characters long."),
 });
 
-export async function handleGenerateCss(input: z.infer<typeof GenerateCssStylesClientInputSchema>): Promise<GenerateCssStylesOutput> {
+// Define a more robust return type for the client
+export type GenerateCssClientOutput = {
+    success: boolean;
+    cssStyles?: string;
+    message?: string;
+}
+
+export async function handleGenerateCss(input: z.infer<typeof GenerateCssStylesClientInputSchema>): Promise<GenerateCssClientOutput> {
     const validatedInput = GenerateCssStylesClientInputSchema.parse(input);
 
     try {
@@ -33,9 +43,12 @@ export async function handleGenerateCss(input: z.infer<typeof GenerateCssStylesC
             layoutPreferences: validatedInput.prompt, // Use user prompt for layout prefs
             portletElements: "buttons, forms, titles, containers, text", // Style a default set of elements
         });
-        return result;
+        return { success: true, cssStyles: result.cssStyles };
     } catch (error) {
         console.error("Error in handleGenerateCss:", error);
-        throw new Error("Failed to generate CSS styles.");
+        return {
+            success: false,
+            message: "I had some trouble with that request. Could you try rephrasing?"
+        }
     }
 }
