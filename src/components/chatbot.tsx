@@ -57,7 +57,8 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
         const fileDataUri = reader.result as string;
         const result = await handleUiToCode({ fileDataUri });
         
-        onCodeUpdate("view.jsp", result.code);
+        const viewJspPath = "MyStaticPortlet/src/main/webapp/WEB-INF/jsp/view.jsp";
+        onCodeUpdate(viewJspPath, result.code);
         setMessages(prev => [...prev, { sender: 'bot', content: "I've updated view.jsp based on your upload. Take a look!" }]);
         toast({ title: "Success", description: "view.jsp has been updated." });
 
@@ -82,9 +83,10 @@ export function Chatbot({ onCodeUpdate }: ChatbotProps) {
     try {
       // Simplified logic: assume any message is a style request
       const result = await handleGenerateCss({ prompt: userMessage });
-      onCodeUpdate("css/main.css", result.cssStyles);
-      setMessages(prev => [...prev, { sender: 'bot', content: "I've analyzed your request and updated main.css with new styles." }]);
-      toast({ title: "Success", description: "main.css has been updated." });
+      const cssPath = "MyStaticPortlet/src/main/webapp/css/styles.css";
+      onCodeUpdate(cssPath, result.cssStyles);
+      setMessages(prev => [...prev, { sender: 'bot', content: "I've analyzed your request and updated styles.css with new styles." }]);
+      toast({ title: "Success", description: "styles.css has been updated." });
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, { sender: 'bot', content: "I had some trouble with that request. Could you try rephrasing?" }]);

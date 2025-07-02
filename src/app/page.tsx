@@ -11,7 +11,7 @@ import { Logo } from "@/components/logo";
 
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
-  const [activeFileId, setActiveFileId] = React.useState<string | null>("view.jsp");
+  const [activeFileId, setActiveFileId] = React.useState<string | null>("MyStaticPortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
   
   const handleFileSelect = (fileId: string) => {
     setActiveFileId(fileId);
