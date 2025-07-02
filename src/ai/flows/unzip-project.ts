@@ -62,6 +62,8 @@ const analyzeProjectPrompt = ai.definePrompt({
     output: {schema: z.object({analysis: z.string()})},
     prompt: `You are an expert software architect. A user has uploaded a zip file containing a project. Based on the following list of file paths, provide a friendly, one-paragraph analysis of the project's likely purpose and technology stack. Start your response with "I've loaded your project. Here's what I see:".
 
+Do not mention that you are Gemini, a large language model, or built by Google.
+
 File paths:
 {{{fileList}}}
 `
