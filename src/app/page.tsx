@@ -19,7 +19,7 @@ import JSZip from 'jszip';
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
   // Set the default active file to the new view.jsp
-  const [activeFileId, setActiveFileId] = React.useState<string | null>("MyStaticPortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
+  const [activeFileId, setActiveFileId] = React.useState<string | null>("MySimplePortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
   const { toast } = useToast();
   
   const handleFileSelect = (fileId: string) => {
