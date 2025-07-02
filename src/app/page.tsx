@@ -18,8 +18,8 @@ import JSZip from 'jszip';
 
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
-  // Set the default active file to the new view.jsp
-  const [activeFileId, setActiveFileId] = React.useState<string | null>("MySimplePortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
+  // Set the default active file to the view.jsp of the new project
+  const [activeFileId, setActiveFileId] = React.useState<string | null>("MyStandardPortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
   const { toast } = useToast();
   
   const handleFileSelect = (fileId: string) => {
@@ -55,7 +55,9 @@ export default function Home() {
 
   const handleProjectUpdate = (newProject: PortletFolder) => {
     setProject(newProject);
-    setActiveFileId(null); // Deselect any active file
+    // Find the new view.jsp to set it as active
+    const newViewJsp = findFileById(newProject, `${newProject.name}/src/main/webapp/WEB-INF/jsp/view.jsp`);
+    setActiveFileId(newViewJsp ? newViewJsp.id : null);
   };
 
   const handleDownloadProject = async () => {
@@ -138,7 +140,7 @@ export default function Home() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[500px] sm:w-[540px] p-0 flex flex-col border-l">
                   <SheetHeader className="sr-only">
-                    <SheetTitle>Sasha AI</SheetTitle>
+                    <SheetTitle>Sasha AI Assistant</SheetTitle>
                     <SheetDescription>
                       Your AI-powered portlet development assistant. Ask questions, upload files, or request code changes.
                     </SheetDescription>
