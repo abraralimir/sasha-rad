@@ -2,9 +2,9 @@
 
 'use server';
 /**
- * @fileOverview An agent that unzips a project archive and returns its file structure.
+ * @fileOverview An agent that unzips a project archive, analyzes it, and returns its file structure.
  *
- * - unzipProject - A function that handles the unzipping process.
+ * - unzipProject - A function that handles the unzipping and analysis process.
  * - UnzipProjectInput - The input type for the unzipProject function.
  * - UnzipProjectOutput - The return type for the unzipProject function.
  */
@@ -56,6 +56,18 @@ export async function unzipProject(
   return unzipProjectFlow(input);
 }
 
+const analyzeProjectPrompt = ai.definePrompt({
+    name: 'analyzeProjectPrompt',
+    input: {schema: z.object({fileList: z.string()})},
+    output: {schema: z.object({analysis: z.string()})},
+    prompt: `You are an expert software architect. A user has uploaded a zip file containing a project. Based on the following list of file paths, provide a friendly, one-paragraph analysis of the project's likely purpose and technology stack. Start your response with "I've loaded your project. Here's what I see:".
+
+File paths:
+{{{fileList}}}
+`
+});
+
+
 const unzipProjectFlow = ai.defineFlow(
   {
     name: 'unzipProjectFlow',
@@ -93,12 +105,16 @@ const unzipProjectFlow = ai.defineFlow(
         })
       );
       
+      const filePaths = fileEntries.map(file => file.name).join('\n');
+      const { output } = await analyzeProjectPrompt({fileList: filePaths});
+      const analysisMessage = output?.analysis || "I've loaded your project from the zip file.";
+      
       // If the root folder has only one child that is also a folder, it's likely a container directory.
       // In that case, we can "unwrap" it to provide a cleaner file tree.
       if (rootFolder.children.length === 1 && rootFolder.children[0].type === 'folder') {
           return {
             success: true,
-            message: "I've loaded your project from the zip file.",
+            message: analysisMessage,
             project: rootFolder.children[0] as PortletFolder,
           };
       }
@@ -106,7 +122,7 @@ const unzipProjectFlow = ai.defineFlow(
 
       return {
         success: true,
-        message: "I've loaded your project from the zip file.",
+        message: analysisMessage,
         project: rootFolder,
       };
 
