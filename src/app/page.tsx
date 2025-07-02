@@ -11,6 +11,7 @@ import { Logo } from "@/components/logo";
 
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
+  // Set the default active file to the new view.jsp
   const [activeFileId, setActiveFileId] = React.useState<string | null>("MyStaticPortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
   
   const handleFileSelect = (fileId: string) => {
@@ -19,13 +20,29 @@ export default function Home() {
 
   const handleContentChange = (newContent: string) => {
     if (activeFileId) {
-      setProject(prevProject => updateFileContent(prevProject, activeFileId, newContent));
+      const updatedProject = updateFileContent(project, activeFileId, newContent);
+      setProject(updatedProject);
     }
   };
 
   const handleSashaCodeUpdate = (filePath: string, newContent: string) => {
-    setProject(prevProject => updateFileContent(prevProject, filePath, newContent));
-    setActiveFileId(filePath);
+    const fileId = filePath; // In our structure, path and id are the same
+    const fileExists = findFileById(project, fileId);
+    
+    let updatedProject: PortletFolder;
+
+    if (fileExists) {
+        updatedProject = updateFileContent(project, fileId, newContent);
+    } else {
+        // This part is a bit tricky as we don't have a function to add new files.
+        // For now, we assume AI will only update existing files.
+        // A more robust implementation would require an `addFile` function.
+        console.warn(`File not found: ${filePath}. Cannot update.`);
+        updatedProject = project; // Return original project
+    }
+    
+    setProject(updatedProject);
+    setActiveFileId(fileId);
   };
   
   const activeFile = activeFileId ? findFileById(project, activeFileId) : null;

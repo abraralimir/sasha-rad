@@ -16,37 +16,130 @@ export type PortletFolder = {
 
 export type PortletEntry = PortletFile | PortletFolder;
 
-// New content for the files
+// New content for the files, inspired by IBM RAD boilerplate
 const myPortletJavaContent = `package com.example.portlet;
 
 import java.io.IOException;
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
 import javax.portlet.GenericPortlet;
 import javax.portlet.PortletException;
+import javax.portlet.PortletRequestDispatcher;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.portlet.PortletRequestDispatcher;
+import javax.portlet.WindowState;
 
+/**
+ * A sample portlet based on GenericPortlet
+ */
 public class MyPortlet extends GenericPortlet {
 
+    /**
+     * @see javax.portlet.GenericPortlet#doView(javax.portlet.RenderRequest,
+     *      javax.portlet.RenderResponse)
+     */
     public void doView(RenderRequest request, RenderResponse response)
             throws PortletException, IOException {
+        // Set the content type for the response
         response.setContentType("text/html");
+        // Get the dispatcher for the view
         PortletRequestDispatcher dispatcher =
             getPortletContext().getRequestDispatcher("/WEB-INF/jsp/view.jsp");
         dispatcher.include(request, response);
     }
+
+    /**
+     * @see javax.portlet.GenericPortlet#doEdit(javax.portlet.RenderRequest,
+     *      javax.portlet.RenderResponse)
+     */
+    public void doEdit(RenderRequest request, RenderResponse response)
+            throws PortletException, IOException {
+        // Set the content type for the response
+        response.setContentType("text/html");
+        // Get the dispatcher for the edit
+        PortletRequestDispatcher dispatcher =
+            getPortletContext().getRequestDispatcher("/WEB-INF/jsp/edit.jsp");
+        dispatcher.include(request, response);
+    }
+
+    /**
+     * @see javax.portlet.GenericPortlet#doHelp(javax.portlet.RenderRequest,
+     *      javax.portlet.RenderResponse)
+     */
+    public void doHelp(RenderRequest request, RenderResponse response)
+        throws PortletException, IOException {
+        // Set the content type for the response
+        response.setContentType("text/html");
+        // Get the dispatcher for the help
+        PortletRequestDispatcher dispatcher =
+            getPortletContext().getRequestDispatcher("/WEB-INF/jsp/help.jsp");
+        dispatcher.include(request, response);
+    }
+
+    /**
+     * @see javax.portlet.Portlet#processAction(javax.portlet.ActionRequest,
+     *      javax.portlet.ActionResponse)
+     */
+    public void processAction(ActionRequest request, ActionResponse response)
+            throws PortletException, IOException {
+        // Set the window state to normal after processing an action
+        response.setWindowState(WindowState.NORMAL);
+    }
 }`;
 
-const stylesCssContent = `/* Default styles for MyStaticPortlet */
-body {
-    font-family: sans-serif;
-    padding: 1em;
-}
-
+const stylesCssContent = `/* Default styles for MyStaticPortlet, inspired by typical RAD projects */
 .portlet-container {
     border: 1px solid #ccc;
-    padding: 1em;
-    border-radius: 5px;
+    padding: 15px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #333;
+}
+
+.portlet-container h1 {
+    font-size: 1.2em;
+    color: #005a9c;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 0;
+}
+
+.portlet-container p {
+    line-height: 1.6;
+}
+
+.portlet-container a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.portlet-container a:hover {
+    text-decoration: underline;
+}
+
+.portlet-container form {
+    margin-top: 15px;
+}
+
+.portlet-container form input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: calc(100% - 20px);
+}
+
+.portlet-container form input[type="submit"] {
+    padding: 8px 15px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.portlet-container form input[type="submit"]:hover {
+    background-color: #0056b3;
 }`;
 
 const scriptJsContent = `// Optional JavaScript for MyStaticPortlet
@@ -57,10 +150,66 @@ const viewJspContent = `<%@ page contentType="text/html" %>
 
 <portlet:defineObjects />
 
-<div class="portlet-container">
-    <h1>My Static Portlet</h1>
+<div class="portlet-container view-mode">
+    <h1>My Static Portlet - View Mode</h1>
     <p>This is the default view of the portlet.</p>
+    <p>
+        <portlet:renderURL portletMode="edit">
+            <a href="<% out.print(renderResponse.createRenderURL()); %>">Switch to Edit Mode</a>
+        </portlet:renderURL>
+    </p>
+    <p>
+        <portlet:renderURL portletMode="help">
+             <a href="<% out.print(renderResponse.createRenderURL()); %>">Get Help</a>
+        </portlet:renderURL>
+    </p>
 </div>`;
+
+const editJspContent = `<%@ page contentType="text/html" %>
+<%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
+
+<portlet:defineObjects />
+
+<div class="portlet-container edit-mode">
+    <h1>My Static Portlet - Edit Mode</h1>
+    <p>This is the edit view. Use this page to configure the portlet.</p>
+    
+    <portlet:actionURL var="formActionURL" />
+    <form action="<%= formActionURL %>" method="POST">
+        <div>
+            <label for="preference">Setting:</label>
+            <input type="text" name="preference" id="preference" />
+        </div>
+        <br/>
+        <div>
+            <input type="submit" value="Save" />
+        </div>
+    </form>
+    
+    <p>
+        <portlet:renderURL portletMode="view">
+            <a href="<% out.print(renderResponse.createRenderURL()); %>">Back to View Mode</a>
+        </portlet:renderURL>
+    </p>
+</div>`;
+
+const helpJspContent = `<%@ page contentType="text/html" %>
+<%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
+
+<portlet:defineObjects />
+
+<div class="portlet-container help-mode">
+    <h1>My Static Portlet - Help</h1>
+    <p>This is the help page for the portlet.</p>
+    <p>It provides instructions and support information.</p>
+    
+    <p>
+        <portlet:renderURL portletMode="view">
+            <a href="<% out.print(renderResponse.createRenderURL()); %>">Back to View Mode</a>
+        </portlet:renderURL>
+    </p>
+</div>`;
+
 
 const portletXmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <portlet-app xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
@@ -75,11 +224,25 @@ const portletXmlContent = `<?xml version="1.0" encoding="UTF-8"?>
             <name>view-template</name>
             <value>/WEB-INF/jsp/view.jsp</value>
         </init-param>
+        <init-param>
+            <name>edit-template</name>
+            <value>/WEB-INF/jsp/edit.jsp</value>
+        </init-param>
+        <init-param>
+            <name>help-template</name>
+            <value>/WEB-INF/jsp/help.jsp</value>
+        </init-param>
+        <expiration-cache>0</expiration-cache>
         <supports>
             <mime-type>text/html</mime-type>
+            <portlet-mode>view</portlet-mode>
+            <portlet-mode>edit</portlet-mode>
+            <portlet-mode>help</portlet-mode>
         </supports>
         <portlet-info>
             <title>My Static Portlet</title>
+            <short-title>My Portlet</short-title>
+            <keywords>example, static, portlet</keywords>
         </portlet-info>
     </portlet>
 </portlet-app>`;
@@ -104,6 +267,13 @@ const pomXmlContent = `<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:
     <version>1.0-SNAPSHOT</version>
     <name>MyStaticPortlet Maven Webapp</name>
     <url>http://maven.apache.org</url>
+    
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>javax.portlet</groupId>
@@ -112,26 +282,45 @@ const pomXmlContent = `<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
     <build>
         <finalName>MyStaticPortlet</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.2.3</version>
+            </plugin>
+        </plugins>
     </build>
 </project>`;
 
 const readmeMdContent = `# MyStaticPortlet
 
-This is a JSR 286 compliant static portlet project.
+This is a JSR 286 compliant static portlet project, with boilerplate code similar to what is generated by enterprise IDEs like IBM RAD.
 
 ## Project Structure
 
 - \`src/main/java\`: Contains the Java source code for the portlet class.
 - \`src/main/webapp\`: Contains web application resources like JSPs, CSS, and JavaScript files.
 - \`pom.xml\`: Maven project configuration file.
+
+### Features
+- Supports VIEW, EDIT, and HELP portlet modes.
+- Includes separate JSP files for each mode.
+- Basic form handling in EDIT mode.
 
 This project was bootstrapped with Portlet Plus.`;
 
@@ -249,6 +438,20 @@ export const initialProject: PortletFolder = {
                                 path: `${rootPath}/src/main/webapp/WEB-INF/jsp/view.jsp`,
                                 content: viewJspContent,
                             },
+                            {
+                                id: `${rootPath}/src/main/webapp/WEB-INF/jsp/edit.jsp`,
+                                name: 'edit.jsp',
+                                type: 'file',
+                                path: `${rootPath}/src/main/webapp/WEB-INF/jsp/edit.jsp`,
+                                content: editJspContent,
+                            },
+                            {
+                                id: `${rootPath}/src/main/webapp/WEB-INF/jsp/help.jsp`,
+                                name: 'help.jsp',
+                                type: 'file',
+                                path: `${rootPath}/src/main/webapp/WEB-INF/jsp/help.jsp`,
+                                content: helpJspContent,
+                            },
                         ]
                     },
                     {
@@ -318,5 +521,11 @@ export function updateFileContent(node: PortletFolder, id: string, content: stri
             return entry;
         });
     };
-    return { ...node, children: updateRecursively(node.children) };
+    
+    const newProject = { ...node, children: updateRecursively(node.children) };
+
+    // Also update the active file if it's the one being changed
+    // This logic is handled in the page component state, but good to be mindful of.
+    
+    return newProject;
 }
