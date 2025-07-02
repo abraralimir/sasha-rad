@@ -3,12 +3,11 @@
 import * as React from "react";
 import { SidebarProvider, Sidebar, SidebarInset, SidebarHeader, SidebarContent, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { Card } from "@/components/ui/card";
-import { initialProject, PortletFile, PortletFolder, findFileById, updateFileContent } from "@/lib/portlet-data";
+import { initialProject, PortletFolder, findFileById, updateFileContent } from "@/lib/portlet-data";
 import { FileExplorer } from "@/components/file-explorer";
 import { CodeEditor } from "@/components/code-editor";
 import { Chatbot, type Message } from "@/components/chatbot";
 import { Logo } from "@/components/logo";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Bot, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -30,9 +29,9 @@ export default function Home() {
   const [activeFileId, setActiveFileId] = React.useState<string | null>("MyStandardPortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
   const { toast } = useToast();
 
-  // Chat state lifted to the main page
   const [messages, setMessages] = React.useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
   
   const handleFileSelect = (fileId: string) => {
     setActiveFileId(fileId);
@@ -116,7 +115,6 @@ export default function Home() {
   
   const activeFile = activeFileId ? findFileById(project, activeFileId) : null;
 
-  // --- Chat Handlers ---
   const handleSendMessage = async (messageContent: string) => {
     if (!messageContent.trim()) return;
     setMessages(prev => [...prev, { sender: 'user', content: messageContent }]);
@@ -219,6 +217,18 @@ export default function Home() {
     }
   };
 
+  if (isChatOpen) {
+    return (
+      <Chatbot 
+        messages={messages}
+        isLoading={isLoading}
+        onSendMessage={handleSendMessage}
+        onFileUpload={handleFileUpload}
+        onClose={() => setIsChatOpen(false)}
+      />
+    );
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -256,28 +266,10 @@ export default function Home() {
                   <Download className="h-5 w-5 mr-2" />
                   Download Project
                 </Button>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button>
-                    <Bot className="h-5 w-5 mr-2" />
-                    Sasha AI
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[500px] sm:w-[540px] p-0 flex flex-col border-l">
-                  <SheetHeader className="sr-only">
-                    <SheetTitle>Sasha AI Assistant</SheetTitle>
-                    <SheetDescription>
-                      Your AI-powered portlet development assistant. Ask questions, upload files, or request code changes.
-                    </SheetDescription>
-                  </SheetHeader>
-                   <Chatbot 
-                    messages={messages}
-                    isLoading={isLoading}
-                    onSendMessage={handleSendMessage}
-                    onFileUpload={handleFileUpload}
-                  />
-                </SheetContent>
-              </Sheet>
+              <Button onClick={() => setIsChatOpen(true)}>
+                <Bot className="h-5 w-5 mr-2" />
+                Sasha AI
+              </Button>
             </div>
           </header>
           <main className="flex-1 p-4 overflow-hidden">

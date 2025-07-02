@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Paperclip, Send, Bot, User, Loader2, Wand2 } from "lucide-react";
+import { Paperclip, Send, Bot, User, Loader2, Wand2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { UiToCodeOutput } from "@/ai/flows/ui-to-code";
@@ -22,9 +22,10 @@ interface ChatbotProps {
   isLoading: boolean;
   onSendMessage: (message: string) => Promise<void>;
   onFileUpload: (file: File) => Promise<void>;
+  onClose?: () => void;
 }
 
-export function Chatbot({ messages, isLoading, onSendMessage, onFileUpload }: ChatbotProps) {
+export function Chatbot({ messages, isLoading, onSendMessage, onFileUpload, onClose }: ChatbotProps) {
   const [inputValue, setInputValue] = React.useState("");
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -55,13 +56,20 @@ export function Chatbot({ messages, isLoading, onSendMessage, onFileUpload }: Ch
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen bg-background">
       <header className="flex items-center justify-between p-3 border-b flex-shrink-0">
         <div className="flex items-center gap-2">
           <Bot className="h-6 w-6 text-primary" />
           <h2 className="text-lg font-semibold font-headline">Sasha AI</h2>
         </div>
-        <Wand2 className="h-5 w-5 text-accent" />
+        <div className="flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-accent" />
+            {onClose && (
+              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close chat">
+                <X className="h-5 w-5" />
+              </Button>
+            )}
+        </div>
       </header>
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div className="space-y-4">
