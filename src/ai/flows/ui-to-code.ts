@@ -1,9 +1,9 @@
 'use server';
 
 /**
- * @fileOverview This flow takes a UI image or JSON file describing the UI and generates the corresponding code for the portlet.
+ * @fileOverview This flow takes a UI image, a source file, or a natural language prompt and generates or updates the corresponding project code.
  *
- * - uiToCode - A function that handles the UI to code generation process.
+ * - uiToCode - A function that handles the code generation process.
  * - UiToCodeInput - The input type for the uiToCode function.
  * - UiToCodeOutput - The return type for the uiToCode function.
  */
@@ -15,8 +15,10 @@ const UiToCodeInputSchema = z.object({
   fileDataUri: z
     .string()
     .describe(
-      "A data URI containing either a UI image or a JSON file describing the UI.  Must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
+      "A data URI containing either a UI image or a source file.  Must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
+    ).optional(),
+  prompt: z.string().describe("A natural language prompt describing a feature to implement or a change to make.").optional(),
+
 });
 export type UiToCodeInput = z.infer<typeof UiToCodeInputSchema>;
 
@@ -38,37 +40,40 @@ const prompt = ai.definePrompt({
   name: 'uiToCodePrompt',
   input: {schema: UiToCodeInputSchema},
   output: {schema: UiToCodeOutputSchema},
-  prompt: `You are an expert portlet code generator and analyst. You will receive a file uploaded by the user. Your task is to analyze the file and generate or update the necessary project files. Your goal is to be as helpful as possible, acting as an AI assistant for portlet development.
+  prompt: `You are an expert portlet developer and AI assistant named Sasha. Your goal is to help the user build and modify their JSR 286 portlet project. You will receive either a file upload OR a text prompt. Your task is to analyze the input and generate or update the necessary project files.
 
-You must adhere to the following rules based on the file type:
+You must respond using the 'UiToCodeOutput' schema. Always provide a friendly and informative 'message' to the user explaining what you've done. If you make code changes, you MUST return them in the 'files' array.
 
-1.  **UI Image (e.g., PNG, JPG) or JSON Description**: If you receive a UI image or a JSON file describing a UI, your primary task is to generate the corresponding view code.
-    *   Generate clean, well-structured JSP code for the portlet's view.
-    *   Place this code in the 'MyStaticPortlet/src/main/webapp/WEB-INF/jsp/view.jsp' file.
-    *   Set 'success' to true and provide a friendly success message about the UI generation.
+**Core Capabilities:**
 
-2.  **portlet.xml file**: If you receive a 'portlet.xml' file, analyze its contents.
-    *   Extract details like portlet-name, display-name, portlet-class, and supported modes.
-    *   Update the project's 'MyStaticPortlet/src/main/webapp/WEB-INF/portlet.xml' to match the uploaded file's configuration.
-    *   Set 'success' to true and provide a message confirming the update and summarizing what was changed.
+1.  **Feature Implementation (from text prompt)**: If you receive a text 'prompt' (and no file), your primary task is to implement the requested feature.
+    *   Analyze the user's request (e.g., "build a feedback form with a 5-star rating", "add a welcome message for the user", "make all buttons orange").
+    *   Determine which files need to be created or modified. This usually involves 'view.jsp' for the UI, 'MyPortlet.java' for the logic (especially 'processAction'), and 'styles.css' for styling.
+    *   Generate clean, well-structured, and standards-compliant code for all affected files.
+    *   For example, for a feedback form, you would add the HTML form to 'view.jsp', add logic to 'processAction' in 'MyPortlet.java' to handle the submission, and potentially add CSS to 'styles.css'.
+    *   Set 'success' to true and provide a message like "I've implemented the feedback form for you. I've updated view.jsp, MyPortlet.java, and styles.css."
 
-3.  **Java or JSP file (.java, .jsp)**: If you receive a Java or JSP source file, analyze it for common issues.
-    *   Review the code for potential bugs, missing imports, or deviations from JSR 286 portlet standards.
-    *   If you find issues, generate a corrected version of the file's content.
-    *   If the code is valid, provide a brief analysis of what the code does and suggest a potential improvement or optimization.
-    *   Return the updated content for the *same file path* it would logically belong to in the project structure. If the file doesn't exist, you can add it. For example, a file named \`MyNewPortlet.java\` should be placed in \`MyStaticPortlet/src/main/java/com/example/portlet/MyNewPortlet.java\`.
-    *   Set 'success' to true and your message should summarize your findings and actions.
+2.  **File Analysis (from file upload)**: If you receive a 'fileDataUri', your behavior is dictated by the file type.
+    *   **UI Image (e.g., PNG, JPG) or JSON Description**: Generate the corresponding view code for the portlet. Place this code in 'MyStaticPortlet/src/main/webapp/WEB-INF/jsp/view.jsp'. Set 'success' to true.
+    *   **portlet.xml file**: Analyze its contents and update the project's 'MyStaticPortlet/src/main/webapp/WEB-INF/portlet.xml' to match.
+    *   **Java or JSP file (.java, .jsp)**: Review the code for potential bugs or deviations from JSR 286 portlet standards. If you find issues, generate a corrected version. If the code is valid, provide a brief analysis. Return the updated content for the same file path.
+    *   **WAR file (.war)**: You CANNOT read its contents. Set 'success' to false. Your message MUST explain this limitation and suggest uploading source files instead.
+    *   **Other files**: Explain that you are not configured to handle it, set 'success' to false.
 
-4.  **WAR file (.war)**: If you detect the file is a WAR archive, you CANNOT read its contents.
-    *   Set 'success' to false.
-    *   Your message MUST explain this limitation clearly and politely. Suggest that the user upload source files instead, such as 'portlet.xml', a JSP file, a Java file, or a UI image. Do not return any files to update.
+**General Rules:**
+*   Always adhere to JSR 286 portlet standards.
+*   Use JSP taglibs like '<portlet:defineObjects />', '<portlet:actionURL>', and '<portlet:renderURL>' correctly.
+*   Ensure all code is clean, well-commented where necessary, and maintainable.
+*   For any changes, return the complete, final content of the file. Do not use diffs.
 
-5.  **Other files**: For any other file type, explain that you are not configured to handle it, set 'success' to false, and provide a helpful message.
-
-Always populate the output schema correctly. For successful operations, provide the file path(s) and new content in the 'files' array.
-
+Input:
+{{#if fileDataUri}}
 Input File:
 {{media url=fileDataUri}}
+{{/if}}
+{{#if prompt}}
+User Prompt: {{{prompt}}}
+{{/if}}
   `,
 });
 

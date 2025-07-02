@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Paperclip, Send, Bot, User, Loader2, Wand2 } from "lucide-react";
-import { handleUiToCode, handleGenerateCss, handleProjectUpload, type GenerateCssClientOutput } from "@/app/actions";
+import { handleUiToCode, handleProjectUpload } from "@/app/actions";
+import type { UiToCodeOutput } from "@/ai/flows/ui-to-code";
 import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
 import type { PortletFolder } from "@/lib/portlet-data";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +27,7 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
   const [messages, setMessages] = React.useState<Message[]>([
     {
       sender: "bot",
-      content: "Hi! I'm Sasha, your AI portlet assistant. I can help you code, style elements, or analyze files. \n\nWhat can we build today? \n\n- Ask me to make changes (e.g., 'Make all buttons orange').\n- Upload a UI image, JSON, or source file for me to analyze.\n- Upload a .zip file to load an entire project.",
+      content: "Hi! I'm Sasha, your AI portlet assistant. I can help you build and modify your project.\n\nWhat can we build today?\n\n- Ask me to build a feature (e.g., 'Make a feedback form with a 5-star rating').\n- Request a style change (e.g., 'Make all buttons orange').\n- Upload a UI image, a source file (.java, .jsp), or a .zip file of an entire project.",
     },
   ]);
   const [inputValue, setInputValue] = React.useState("");
@@ -58,8 +59,8 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
         if (result.success && result.files) {
             result.files.forEach(file => onCodeUpdate(file.path, file.content));
             toast({ title: "Success", description: "Project files have been updated." });
-        } else if (!result.success) {
-            toast({ variant: "destructive", title: "Info", description: "Please see the message from Sasha for details." });
+        } else if (!result.success && result.message) {
+            toast({ variant: "destructive", title: "Info", description: result.message });
         }
       } catch (error) {
         console.error(error);
@@ -134,18 +135,19 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
     setIsLoading(true);
 
     try {
-      const result: GenerateCssClientOutput = await handleGenerateCss({ prompt: userMessage });
+      const result: UiToCodeOutput = await handleUiToCode({ prompt: userMessage });
       
-      if (result.success && result.cssStyles) {
-        const cssPath = "MyStaticPortlet/src/main/webapp/css/styles.css";
-        onCodeUpdate(cssPath, result.cssStyles);
-        setMessages(prev => [...prev, { sender: 'bot', content: "I've analyzed your request and updated styles.css with new styles." }]);
-        toast({ title: "Success", description: "styles.css has been updated." });
-      } else {
-        const errorMessage = result.message || "I had some trouble with that request. Could you try rephrasing?";
-        setMessages(prev => [...prev, { sender: 'bot', content: errorMessage }]);
-        toast({ variant: "destructive", title: "Error", description: "Could not generate CSS styles." });
+      if (result.message) {
+        setMessages(prev => [...prev, { sender: 'bot', content: result.message }]);
       }
+
+      if (result.success && result.files && result.files.length > 0) {
+        result.files.forEach(file => onCodeUpdate(file.path, file.content));
+        toast({ title: "Success", description: "Project files have been updated." });
+      } else if (!result.success && result.message) {
+         toast({ variant: "destructive", title: "Info", description: result.message });
+      }
+
     } catch (error) {
       console.error(error);
       const errorMessage = "An unexpected network error occurred. Please check your connection and try again.";
@@ -201,7 +203,7 @@ export function Chatbot({ onCodeUpdate, onProjectUpdate }: ChatbotProps) {
       <div className="p-3 border-t bg-background flex-shrink-0">
         <div className="relative">
           <Textarea
-            placeholder="e.g., 'Make all buttons orange with rounded corners.'"
+            placeholder="e.g., 'Build a feedback form with a 5-star rating...'"
             className="pr-20 min-h-[60px]"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
