@@ -40,7 +40,7 @@ export function CodeSnippet({ filePath, code }: CodeSnippetProps) {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className={cn("transition-all duration-300", isExpanded ? 'h-96' : 'h-48')}>
+        <ScrollArea className={cn("transition-all duration-300", isExpanded ? 'h-[60vh]' : 'h-48')}>
             <pre className="p-3 text-sm whitespace-pre-wrap font-code text-foreground">{code}</pre>
         </ScrollArea>
       </CardContent>
