@@ -1,0 +1,24 @@
+dependencies {
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel"
+	compileOnly group: "javax.portlet", name: "portlet-api"
+	compileOnly group: "org.osgi", name: "osgi.cmpn"
+    compileOnly group: "com.liferay.portlet.bridges", name: "com.liferay.portlet.bridges.mvc"
+    compileOnly group: "org.osgi.service.component.annotations", name: "org.osgi.service.component.annotations"
+
+    // JSP Taglib dependencies
+    compileOnly group: "com.liferay", name: "com.liferay.asset.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.comment.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.frontend.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.journal.taglib"
+    compileOnly group: "com.liferay.layout.taglib"
+    compileOnly group: "com.liferay.portlet.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.site.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.trash.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.wiki.taglib"
+}
+
+task npmBuild(type: Exec) {
+    commandLine 'npm', 'run', 'build'
+}
+
+jar.dependsOn(npmBuild)

@@ -1,0 +1,9 @@
+{
+	"config": {
+		"imports": {
+			"react": "React",
+			"react-dom": "ReactDOM"
+		}
+	},
+	"webpack": "webpack.config.js"
+}
