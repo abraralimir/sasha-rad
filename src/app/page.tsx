@@ -77,23 +77,26 @@ export default function Home() {
     }
   };
 
-  const handleSashaCodeUpdate = (filePath: string, newContent: string) => {
-    setProject(currentProject => {
-        const fileExists = findFileById(currentProject, filePath);
-        let updatedProject: PortletFolder;
+  const handleSashaBatchUpdate = (files: Array<{path: string, content: string}>) => {
+    if (!files || files.length === 0) return;
 
-        if (fileExists) {
-            // File exists, just update its content
-            updatedProject = updateFileContent(currentProject, filePath, newContent);
-        } else {
-            // File does not exist, create it (and any parent folders)
-            updatedProject = addFileToTree(currentProject, filePath, newContent);
+    setProject(currentProject => {
+        let updatedProject = currentProject;
+        // Process all file changes in a loop, operating on the result of the previous change.
+        // This makes the process atomic and avoids state update race conditions.
+        for (const file of files) {
+            const fileExists = findFileById(updatedProject, file.path);
+            if (fileExists) {
+                updatedProject = updateFileContent(updatedProject, file.path, file.content);
+            } else {
+                updatedProject = addFileToTree(updatedProject, file.path, file.content);
+            }
         }
         return updatedProject;
     });
 
-    // Set the newly created/updated file as active
-    setActiveFileId(filePath);
+    // Set the last file in the batch as the active one to show the user the result.
+    setActiveFileId(files[files.length - 1].path);
   };
   
   const findFirstFile = (folder: PortletFolder): string | null => {
@@ -174,8 +177,8 @@ export default function Home() {
 
       if (result.success && result.files && result.files.length > 0) {
         if (result.shouldApplyChanges) {
-          result.files.forEach(file => handleSashaCodeUpdate(file.path, file.content));
-          toast({ title: "Success", description: "Project files have been updated." });
+            handleSashaBatchUpdate(result.files);
+            toast({ title: "Success", description: "Project files have been updated." });
         }
       } else if (!result.success && result.message) {
          toast({ variant: "destructive", title: "Info", description: result.message });
@@ -202,7 +205,7 @@ export default function Home() {
         setMessages(prev => [...prev, { sender: 'bot', content: result.message, files: result.files }]);
 
         if (result.success && result.files && result.shouldApplyChanges) {
-            result.files.forEach(file => handleSashaCodeUpdate(file.path, file.content));
+            handleSashaBatchUpdate(result.files);
             toast({ title: "Success", description: "Project files have been updated." });
         } else if (!result.success && result.message) {
             toast({ variant: "destructive", title: "Info", description: result.message });
@@ -340,5 +343,3 @@ export default function Home() {
     </SidebarProvider>
   );
 }
-
-    
