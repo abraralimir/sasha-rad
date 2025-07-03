@@ -191,7 +191,9 @@ const initJspContent = `<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefi
 <portlet:defineObjects />
 `;
 
-const mainCssContent = `/* Add your custom styles here */
+const mainCssContent = `#<portlet-namespace />-root {
+  min-height: 200px;
+}
 `;
 
 const languagePropertiesContent = `javax.portlet.title=My React Portlet
@@ -475,5 +477,7 @@ export function updateFileContent(node: PortletFolder, id: string, content: stri
 
     return newProject;
 }
+
+    
 
     
