@@ -1,0 +1,14 @@
+dependencies {
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel"
+    compileOnly group: "javax.portlet", name: "portlet-api"
+    compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations"
+    
+    // For liferay-npm-bundler
+    compileOnly group: "com.liferay", name: "com.liferay.frontend.js.loader.modules.extender.api"
+}
+
+jar {
+	manifest {
+		attributes('Require-Capability': 'osgi.extender;filter:="(osgi.extender=liferay.js.loader.modules.extender.capability.provider)")')
+	}
+}

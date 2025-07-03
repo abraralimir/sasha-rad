@@ -1,0 +1,6 @@
+Bundle-Name: My React Portlet
+Bundle-SymbolicName: com.example.reactportlet
+Bundle-Version: 1.0.0
+-dsannotations-options: inherit
+-sources: true
+Web-ContextPath: /my-react-portlet

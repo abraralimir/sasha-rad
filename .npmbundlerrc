@@ -1,0 +1,8 @@
+{
+    "source": "src/main/resources/META-INF/resources",
+    "webpack": {
+        "config": {
+            "path": "webpack.config.js"
+        }
+    }
+}
