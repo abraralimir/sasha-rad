@@ -19,234 +19,309 @@ export type PortletEntry = PortletFile | PortletFolder;
 
 // --- File Contents ---
 
-const appJsxContent = `import React from 'react';
-import Header from './components/Header';
+const buildGradleContent = `dependencies {
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel"
+	compileOnly group: "javax.portlet", name: "portlet-api"
+	compileOnly group: "org.osgi", name: "osgi.cmpn"
+    compileOnly group: "com.liferay.portlet.bridges", name: "com.liferay.portlet.bridges.mvc"
+    compileOnly group: "org.osgi.service.component.annotations", name: "org.osgi.service.component.annotations"
+}`;
 
-function App() {
-  return (
-    <div className="App">
-      <Header title="Welcome to Your React App" />
-      <main>
-        <p>
-          Start building your application by editing <code>src/App.jsx</code>.
-        </p>
-        <p>
-          You can ask Sasha to create new components, add styling, or implement features!
-        </p>
-      </main>
-    </div>
-  );
-}
+const bndBndContent = `Bundle-Name: My React Portlet
+Bundle-SymbolicName: com.example.my.reactportlet
+Bundle-Version: 1.0.0
+-ds-annotations-options: inherit
+Web-ContextPath: /my-react-portlet`;
 
-export default App;
+const npmBundlerRcContent = `{
+	"config": {
+		"imports": {
+			"react": "React",
+			"react-dom": "ReactDOM"
+		}
+	},
+	"webpack": "webpack.config.js"
+}`;
+
+const packageJsonContent = `{
+  "name": "my-react-portlet",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.1",
+    "@babel/core": "^7.24.4",
+    "@babel/preset-env": "^7.24.4",
+    "@babel/preset-react": "^7.24.1",
+    "babel-loader": "^9.1.3",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "build": "webpack --mode=production"
+  }
+}`;
+
+const readmeMdContent = `# My React Portlet
+
+This project is a Liferay portlet built with React.
+
+## Overview
+
+This is a sample project that demonstrates how to create a client-side portlet using React and Liferay's tooling.
+
+## Build & Deploy
+
+1.  **Prerequisites**: You need a Liferay Workspace set up.
+2.  **Move Folder**: Move this \`my-react-portlet\` folder into your Liferay Workspace's \`modules\` directory.
+3.  **Build**: From the root of your Liferay Workspace, run the Gradle \`deploy\` task:
+    \`\`\`bash
+    ./gradlew deploy
+    \`\`\`
+4.  **Deploy**: The generated \`.jar\` file will be in the \`build/libs\` directory inside this project. It will be automatically deployed to your running Liferay bundle.
+5.  **Add to Page**: You can find "My React Portlet" in the "Sample" category when adding portlets to a Liferay page.
 `;
 
-const headerJsxContent = `import React from 'react';
+const webpackConfigContent = `const path = require('path');
 
-function Header({ title }) {
-  return (
-    <header className="App-header">
-      <h1>{title}</h1>
-    </header>
-  );
-}
+module.exports = {
+  entry: {
+    main: './src/main/resources/META-INF/resources/js/main.js',
+  },
+  output: {
+    path: path.resolve(
+      __dirname,
+      'build/resources/main/META-INF/resources/js'
+    ),
+    filename: '[name].js',
+    library: 'MyReactPortlet',
+    libraryTarget: 'global'
+  },
+  module: {
+    rules: [
+      {
+        test: /\\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react'],
+          },
+        },
+      },
+    ],
+  },
+};`;
 
-export default Header;
-`;
+const reactPortletJavaContent = `package com.example.reactportlet;
 
-const indexCssContent = `body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f0f2f5;
-  color: #333;
-}
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
-.App {
-  text-align: center;
-  padding: 2em;
-}
+import javax.portlet.Portlet;
 
-.App-header {
-  background-color: #282c34;
-  padding: 20px;
-  color: white;
-  border-radius: 8px;
-  margin-bottom: 2em;
-}
+import org.osgi.service.component.annotations.Component;
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-  background-color: #eee;
-  padding: 2px 4px;
-  border-radius: 4px;
-}
-`;
-
-const indexJsContent = `import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-`;
+@Component(
+	immediate = true,
+	property = {
+		"com.liferay.portlet.display-category=category.sample",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
+		"com.liferay.portlet.instanceable=true",
+		"javax.portlet.display-name=My React Portlet",
+		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.view-template=/view.jsp",
+		"javax.portlet.name=com_example_reactportlet_ReactPortlet",
+		"javax.portlet.resource-bundle=content.Language",
+		"javax.portlet.security-role-ref=power-user,user"
+	},
+	service = Portlet.class
+)
+public class ReactPortlet extends MVCPortlet {
+}`;
 
 const indexHtmlContent = `<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My React Portlet</title>
+</head>
+<body>
     <div id="root"></div>
-  </body>
-</html>
-`;
+    <!-- The liferay-npm-bundler will automatically add the script tag during the build -->
+</body>
+</html>`;
 
-const packageJsonContent = `{
-  "name": "my-react-project",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-scripts": "5.0.1"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
-}
-`;
+const appJsContent = `import React from 'react';
 
-const readmeMdContent = `# MyReactProject
+export default function App() {
+  const containerStyles = {
+    padding: '20px',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    backgroundColor: '#f9f9f9',
+    fontFamily: 'Arial, sans-serif'
+  };
 
-This is a sample React project to get you started in the AI React Studio. It's bootstrapped with a setup similar to Create React App.
+  const headerStyles = {
+    color: '#333'
+  };
 
-### How to Run Locally
-- Use the "Download Project" button to get a zip of the source code.
-- Unzip the file.
-- Open your terminal, navigate into the project directory, and run:
-\`\`\`
-npm install
-\`\`\`
-- Then, to start the development server, run:
-\`\`\`
-npm start
-\`\`\`
-- Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+  const paragraphStyles = {
+    color: '#555'
+  };
 
-### How to Use the Studio
-- Ask Sasha, your AI assistant, to build upon this foundation. 
-- For example: "Create a login form component" or "Add a button to the header".
-- Sasha will generate the code in the chat. You can then ask her to apply it directly to the files in the IDE.
-`;
+  return (
+    <div style={containerStyles}>
+      <h1 style={headerStyles}>Hello from My React Portlet!</h1>
+      <p style={paragraphStyles}>This component is rendered by React within a Liferay portlet.</p>
+    </div>
+  );
+}`;
+
+const mainJsContent = `import React from 'react';
+import ReactDOM from 'react-dom';
+
+import App from './App';
+
+/**
+ * This is the main entry point of the portlet.
+ *
+ * @param {string} portletElementId The ID of the DOM element which
+ *                                  acts as the root of the portlet
+ */
+export default function main({portletElementId}) {
+    const portletElement = document.getElementById(portletElementId);
+
+    ReactDOM.render(<App />, portletElement);
+}`;
 
 
-const rootPath = "MyReactProject";
+const rootPath = "my-react-portlet";
 
 export const initialProject: PortletFolder = {
   id: rootPath,
-  name: "MyReactProject",
+  name: "my-react-portlet",
   type: 'folder',
   path: rootPath,
   children: [
     {
-      id: `${rootPath}/public`,
-      name: 'public',
-      type: 'folder',
-      path: `${rootPath}/public`,
-      children: [
-        {
-          id: `${rootPath}/public/index.html`,
-          name: 'index.html',
-          type: 'file',
-          path: `${rootPath}/public/index.html`,
-          content: indexHtmlContent,
-        },
-      ],
-    },
-    {
-      id: `${rootPath}/src`,
-      name: 'src',
-      type: 'folder',
-      path: `${rootPath}/src`,
-      children: [
-        {
-          id: `${rootPath}/src/components`,
-          name: 'components',
-          type: 'folder',
-          path: `${rootPath}/src/components`,
-          children: [
+        id: `${rootPath}/src`,
+        name: 'src',
+        type: 'folder',
+        path: `${rootPath}/src`,
+        children: [
             {
-              id: `${rootPath}/src/components/Header.jsx`,
-              name: 'Header.jsx',
-              type: 'file',
-              path: `${rootPath}/src/components/Header.jsx`,
-              content: headerJsxContent,
-            },
-          ],
-        },
-        {
-          id: `${rootPath}/src/App.jsx`,
-          name: 'App.jsx',
-          type: 'file',
-          path: `${rootPath}/src/App.jsx`,
-          content: appJsxContent,
-        },
-        {
-          id: `${rootPath}/src/index.css`,
-          name: 'index.css',
-          type: 'file',
-          path: `${rootPath}/src/index.css`,
-          content: indexCssContent,
-        },
-        {
-          id: `${rootPath}/src/index.js`,
-          name: 'index.js',
-          type: 'file',
-          path: `${rootPath}/src/index.js`,
-          content: indexJsContent,
-        },
-      ],
+                id: `${rootPath}/src/main`,
+                name: 'main',
+                type: 'folder',
+                path: `${rootPath}/src/main`,
+                children: [
+                    {
+                        id: `${rootPath}/src/main/java`,
+                        name: 'java',
+                        type: 'folder',
+                        path: `${rootPath}/src/main/java`,
+                        children: [
+                            {
+                                id: `${rootPath}/src/main/java/com`,
+                                name: 'com',
+                                type: 'folder',
+                                path: `${rootPath}/src/main/java/com`,
+                                children: [
+                                    {
+                                        id: `${rootPath}/src/main/java/com/example`,
+                                        name: 'example',
+                                        type: 'folder',
+                                        path: `${rootPath}/src/main/java/com/example`,
+                                        children: [
+                                            {
+                                                id: `${rootPath}/src/main/java/com/example/reactportlet`,
+                                                name: 'reactportlet',
+                                                type: 'folder',
+                                                path: `${rootPath}/src/main/java/com/example/reactportlet`,
+                                                children: [
+                                                    {
+                                                        id: `${rootPath}/src/main/java/com/example/reactportlet/ReactPortlet.java`,
+                                                        name: 'ReactPortlet.java',
+                                                        type: 'file',
+                                                        path: `${rootPath}/src/main/java/com/example/reactportlet/ReactPortlet.java`,
+                                                        content: reactPortletJavaContent,
+                                                    },
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: `${rootPath}/src/main/resources`,
+                        name: 'resources',
+                        type: 'folder',
+                        path: `${rootPath}/src/main/resources`,
+                        children: [
+                            {
+                                id: `${rootPath}/src/main/resources/META-INF`,
+                                name: 'META-INF',
+                                type: 'folder',
+                                path: `${rootPath}/src/main/resources/META-INF`,
+                                children: [
+                                    {
+                                        id: `${rootPath}/src/main/resources/META-INF/resources`,
+                                        name: 'resources',
+                                        type: 'folder',
+                                        path: `${rootPath}/src/main/resources/META-INF/resources`,
+                                        children: [
+                                            {
+                                                id: `${rootPath}/src/main/resources/META-INF/resources/index.html`,
+                                                name: 'index.html',
+                                                type: 'file',
+                                                path: `${rootPath}/src/main/resources/META-INF/resources/index.html`,
+                                                content: indexHtmlContent,
+                                            },
+                                            {
+                                                id: `${rootPath}/src/main/resources/META-INF/resources/js`,
+                                                name: 'js',
+                                                type: 'folder',
+                                                path: `${rootPath}/src/main/resources/META-INF/resources/js`,
+                                                children: [
+                                                    {
+                                                        id: `${rootPath}/src/main/resources/META-INF/resources/js/App.js`,
+                                                        name: 'App.js',
+                                                        type: 'file',
+                                                        path: `${rootPath}/src/main/resources/META-INF/resources/js/App.js`,
+                                                        content: appJsContent,
+                                                    },
+                                                    {
+                                                        id: `${rootPath}/src/main/resources/META-INF/resources/js/main.js`,
+                                                        name: 'main.js',
+                                                        type: 'file',
+                                                        path: `${rootPath}/src/main/resources/META-INF/resources/js/main.js`,
+                                                        content: mainJsContent,
+                                                    },
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: `${rootPath}/src/main/webpack.config.js`,
+                        name: 'webpack.config.js',
+                        type: 'file',
+                        path: `${rootPath}/src/main/webpack.config.js`,
+                        content: webpackConfigContent,
+                    }
+                ]
+            }
+        ]
     },
     {
       id: `${rootPath}/package.json`,
@@ -254,6 +329,27 @@ export const initialProject: PortletFolder = {
       type: 'file',
       path: `${rootPath}/package.json`,
       content: packageJsonContent,
+    },
+    {
+      id: `${rootPath}/bnd.bnd`,
+      name: 'bnd.bnd',
+      type: 'file',
+      path: `${rootPath}/bnd.bnd`,
+      content: bndBndContent,
+    },
+    {
+      id: `${rootPath}/build.gradle`,
+      name: 'build.gradle',
+      type: 'file',
+      path: `${rootPath}/build.gradle`,
+      content: buildGradleContent,
+    },
+    {
+      id: `${rootPath}/.npmbundlerrc`,
+      name: '.npmbundlerrc',
+      type: 'file',
+      path: `${rootPath}/.npmbundlerrc`,
+      content: npmBundlerRcContent,
     },
     {
       id: `${rootPath}/README.md`,
@@ -298,3 +394,5 @@ export function updateFileContent(node: PortletFolder, id: string, content: stri
 
     return newProject;
 }
+
+    

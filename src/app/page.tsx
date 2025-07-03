@@ -20,18 +20,18 @@ import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const CHAT_STORAGE_KEY = "sasha-chat-history-react";
+const CHAT_STORAGE_KEY = "sasha-chat-history-portlet";
 
 const initialMessages: Message[] = [
     {
       sender: "bot",
-      content: "Hi! I'm Sasha, your AI React assistant. I can help you build and modify your project, from a single component to a complete application.\n\nWhat can we build today?\n\n- **Request a feature**: 'Build a complete sign-up page' or 'Create a feedback form with a 5-star rating.'\n- **Upload a UI image**: I'll generate the JSX and CSS to match the design.\n- **Upload a JSON file**: I can use it as a specification to generate a form.\n- **Upload a project**: Upload a .zip file to load your entire project and I can help you with it.",
+      content: "Hi! I'm Sasha, your AI assistant for Liferay React Portlets. I can help you build and modify your portlet project, from a single component to a complete application.\n\nWhat can we build today?",
     },
 ];
 
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
-  const [activeFileId, setActiveFileId] = React.useState<string | null>("MyReactProject/src/App.jsx");
+  const [activeFileId, setActiveFileId] = React.useState<string | null>("my-react-portlet/src/main/resources/META-INF/resources/js/App.js");
   const { toast } = useToast();
 
   const [messages, setMessages] = React.useState<Message[]>(initialMessages);
@@ -114,7 +114,7 @@ export default function Home() {
   
   const findFirstFile = (folder: PortletFolder): string | null => {
     for (const child of folder.children) {
-        if (child.type === 'file' && child.name.endsWith('.jsx')) {
+        if (child.type === 'file' && child.name.endsWith('.js')) {
             return child.id;
         }
         if (child.type === 'folder') {
@@ -288,7 +288,7 @@ export default function Home() {
             <SheetContent className="w-full sm:w-full sm:max-w-none h-full p-0 flex flex-col">
                  <SheetHeader className="p-3 border-b flex-shrink-0">
                     <SheetTitle className="sr-only">Sasha AI</SheetTitle>
-                    <SheetDescription className="sr-only">A friendly AI chat assistant to help you build and modify your React project.</SheetDescription>
+                    <SheetDescription className="sr-only">An AI assistant for Liferay React Portlet development.</SheetDescription>
                 </SheetHeader>
                  <Chatbot 
                     messages={messages}
@@ -332,7 +332,7 @@ export default function Home() {
           <header className="flex items-center justify-between gap-4 border-b p-2 h-14 shrink-0">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="hidden md:flex"/>
-              <h1 className="text-lg font-semibold font-headline flex-1">React Studio</h1>
+              <h1 className="text-lg font-semibold font-headline flex-1">Portlet Studio</h1>
             </div>
             <div className="flex items-center gap-2">
                <Button variant="outline" onClick={handleDownloadProject}>
@@ -356,3 +356,5 @@ export default function Home() {
     </SidebarProvider>
   );
 }
+
+    
