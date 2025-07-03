@@ -20,18 +20,18 @@ import type { UnzipProjectOutput } from "@/ai/flows/unzip-project";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const CHAT_STORAGE_KEY = "sasha-chat-history";
+const CHAT_STORAGE_KEY = "sasha-chat-history-react";
 
 const initialMessages: Message[] = [
     {
       sender: "bot",
-      content: "Hi! I'm Sasha, your AI portlet assistant. I can help you build and modify your project from a simple feature to a complete view.\n\nWhat can we build today?\n\n- **Request a feature**: 'Build a complete sign-up page' or 'Create a feedback form with a 5-star rating.'\n- **Upload a UI image**: I'll generate the JSP code to match the design.\n- **Upload a JSON file**: I can use it as a specification to generate a form.\n- **Upload a project**: Upload a .zip file to load your entire project and I can help you with it.",
+      content: "Hi! I'm Sasha, your AI React assistant. I can help you build and modify your project, from a single component to a complete application.\n\nWhat can we build today?\n\n- **Request a feature**: 'Build a complete sign-up page' or 'Create a feedback form with a 5-star rating.'\n- **Upload a UI image**: I'll generate the JSX and CSS to match the design.\n- **Upload a JSON file**: I can use it as a specification to generate a form.\n- **Upload a project**: Upload a .zip file to load your entire project and I can help you with it.",
     },
 ];
 
 export default function Home() {
   const [project, setProject] = React.useState<PortletFolder>(initialProject);
-  const [activeFileId, setActiveFileId] = React.useState<string | null>("MyStandardPortlet/src/main/webapp/WEB-INF/jsp/view.jsp");
+  const [activeFileId, setActiveFileId] = React.useState<string | null>("MyReactProject/src/App.jsx");
   const { toast } = useToast();
 
   const [messages, setMessages] = React.useState<Message[]>(initialMessages);
@@ -85,18 +85,51 @@ export default function Home() {
     if (fileExists) {
         updatedProject = updateFileContent(project, fileId, newContent);
     } else {
-        console.warn(`File not found: ${filePath}. Cannot update.`);
-        updatedProject = project;
+        // This is a new file. We need to add it to the project structure.
+        // This is a simplified approach. A real implementation would be more robust.
+        const pathParts = filePath.split('/');
+        const fileName = pathParts.pop();
+        if (fileName) {
+            // A more robust solution would create the folder structure if it doesn't exist.
+            // For now, we'll assume a flat structure or that folders exist.
+            const newFile = { id: filePath, name: fileName, type: 'file' as const, path: filePath, content: newContent };
+            
+            const addFile = (folder: PortletFolder): PortletFolder => {
+                // A better implementation would traverse the path.
+                // This is a simplification for the demo.
+                if (filePath.startsWith(folder.path)) {
+                   return { ...folder, children: [...folder.children, newFile] };
+                }
+                return { ...folder, children: folder.children.map(c => c.type === 'folder' ? addFile(c) : c) };
+            };
+            updatedProject = addFile(project);
+        } else {
+           updatedProject = project;
+        }
     }
     
     setProject(updatedProject);
     setActiveFileId(fileId);
   };
+  
+  const findFirstFile = (folder: PortletFolder): string | null => {
+    for (const child of folder.children) {
+        if (child.type === 'file' && child.name.endsWith('.jsx')) {
+            return child.id;
+        }
+        if (child.type === 'folder') {
+            const foundId = findFirstFile(child);
+            if (foundId) return foundId;
+        }
+    }
+    return null;
+  }
+
 
   const handleProjectUpdate = (newProject: PortletFolder) => {
     setProject(newProject);
-    const newViewJsp = findFileById(newProject, `${newProject.name}/src/main/webapp/WEB-INF/jsp/view.jsp`);
-    setActiveFileId(newViewJsp ? newViewJsp.id : null);
+    const firstFile = findFirstFile(newProject);
+    setActiveFileId(firstFile);
   };
 
   const handleClearSession = () => {
@@ -124,11 +157,8 @@ export default function Home() {
         }
     }
 
-    const rootFolder = zip.folder(project.name);
-    if (rootFolder) {
-        addFolderToZip(project, rootFolder);
-    }
-
+    addFolderToZip(project, zip);
+    
     try {
         const zipBlob = await zip.generateAsync({ type: "blob" });
         saveAs(zipBlob, `${project.name}.zip`);
@@ -258,7 +288,7 @@ export default function Home() {
             <SheetContent className="w-full sm:w-full sm:max-w-none h-full p-0 flex flex-col">
                  <SheetHeader className="p-3 border-b flex-shrink-0">
                     <SheetTitle className="sr-only">Sasha AI</SheetTitle>
-                    <SheetDescription className="sr-only">A friendly AI chat assistant to help you build and modify your portlet project.</SheetDescription>
+                    <SheetDescription className="sr-only">A friendly AI chat assistant to help you build and modify your React project.</SheetDescription>
                 </SheetHeader>
                  <Chatbot 
                     messages={messages}
@@ -302,7 +332,7 @@ export default function Home() {
           <header className="flex items-center justify-between gap-4 border-b p-2 h-14 shrink-0">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="hidden md:flex"/>
-              <h1 className="text-lg font-semibold font-headline flex-1">Portlet IDE</h1>
+              <h1 className="text-lg font-semibold font-headline flex-1">React IDE</h1>
             </div>
             <div className="flex items-center gap-2">
                <Button variant="outline" onClick={handleDownloadProject}>

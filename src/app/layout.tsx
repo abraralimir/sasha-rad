@@ -4,8 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Portlet Plus',
-  description: 'Your AI-powered portlet development assistant.',
+  title: 'React Studio',
+  description: 'Your AI-powered React development assistant.',
 };
 
 export default function RootLayout({

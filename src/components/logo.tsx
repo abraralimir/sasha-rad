@@ -7,7 +7,7 @@ export function Logo() {
         <BoxSelect className="h-5 w-5" />
       </div>
       <span className="font-bold text-lg font-headline transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
-        Portlet Plus
+        React Studio
       </span>
     </div>
   );
