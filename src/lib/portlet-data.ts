@@ -21,7 +21,6 @@ export type PortletEntry = PortletFile | PortletFolder;
 
 const appJsxContent = `import React from 'react';
 import Header from './components/Header';
-import './index.css';
 
 function App() {
   return (
@@ -88,11 +87,32 @@ code {
 }
 `;
 
+const indexJsContent = `import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+`;
+
 const indexHtmlContent = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>React App</title>
   </head>
   <body>
@@ -108,29 +128,57 @@ const packageJsonContent = `{
   "private": true,
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "echo 'No build process configured in this IDE'",
-    "build": "echo 'No build process configured in this IDE'",
-    "test": "echo 'No build process configured in this IDE'"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
 `;
 
 const readmeMdContent = `# MyReactProject
 
-This is a sample React project to get you started in the AI React Studio.
+This is a sample React project to get you started in the AI React Studio. It's bootstrapped with a setup similar to Create React App.
 
-### Features
-- **Modern Stack**: A simple, clean React setup.
-- **Component-Based**: Includes a basic App and Header component.
-- **AI-Ready**: Use Sasha, your AI assistant, to build upon this foundation. Ask her to create new components, add features, or write styles.
+### How to Run Locally
+- Use the "Download Project" button to get a zip of the source code.
+- Unzip the file.
+- Open your terminal, navigate into the project directory, and run:
+\`\`\`
+npm install
+\`\`\`
+- Then, to start the development server, run:
+\`\`\`
+npm start
+\`\`\`
+- Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-### How to Use
-- Use the "Download Project" button to get a zip of the source.
-- You can use this as a starting point for your own React projects.
-- Ask Sasha to make changes. For example: "Create a login form component" or "Add a button to the header".`;
+### How to Use the Studio
+- Ask Sasha, your AI assistant, to build upon this foundation. 
+- For example: "Create a login form component" or "Add a button to the header".
+- Sasha will generate the code in the chat. You can then ask her to apply it directly to the files in the IDE.
+`;
 
 
 const rootPath = "MyReactProject";
@@ -190,6 +238,13 @@ export const initialProject: PortletFolder = {
           type: 'file',
           path: `${rootPath}/src/index.css`,
           content: indexCssContent,
+        },
+        {
+          id: `${rootPath}/src/index.js`,
+          name: 'index.js',
+          type: 'file',
+          path: `${rootPath}/src/index.js`,
+          content: indexJsContent,
         },
       ],
     },
