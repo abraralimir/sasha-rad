@@ -309,7 +309,6 @@ export default function Home() {
         </SidebarContent>
         <SidebarFooter>
             <Button variant="ghost" onClick={handleClearSession}>
-                <Trash2 className="mr-2 h-4 w-4" />
                 Clear Session
             </Button>
         </SidebarFooter>
@@ -323,7 +322,6 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
                <Button variant="outline" onClick={handleDownloadProject}>
-                  <Download className="h-5 w-5 mr-2" />
                   Download Project
                 </Button>
               <Button onClick={() => setIsChatOpen(true)}>
