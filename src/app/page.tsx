@@ -332,7 +332,7 @@ export default function Home() {
           <header className="flex items-center justify-between gap-4 border-b p-2 h-14 shrink-0">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="hidden md:flex"/>
-              <h1 className="text-lg font-semibold font-headline flex-1">React IDE</h1>
+              <h1 className="text-lg font-semibold font-headline flex-1">React Studio</h1>
             </div>
             <div className="flex items-center gap-2">
                <Button variant="outline" onClick={handleDownloadProject}>
