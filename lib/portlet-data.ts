@@ -78,7 +78,8 @@ const packageJsonContent = `{
     "liferay-npm-bundler": "^2.31.0",
     "liferay-npm-scripts": "^31.0.0",
     "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "sass": "^1.77.2"
   },
   "scripts": {
     "build": "babel --source-maps -d build/resources/main/META-INF/resources/js src/main/resources/META-INF/resources/js && liferay-npm-bundler"
@@ -478,6 +479,51 @@ export function updateFileContent(node: PortletFolder, id: string, content: stri
     return newProject;
 }
 
+export function addFileToTree(root: PortletFolder, filePath: string, content: string): PortletFolder {
+    const newRoot = JSON.parse(JSON.stringify(root)); // Deep copy to avoid mutation issues
+    const parts = filePath.split('/');
+    const fileName = parts.pop();
+    if (!fileName) return newRoot; // Invalid path
+
+    let currentNode: PortletFolder = newRoot;
+
+    // Traverse or create folders for the file's path
+    // Start from index 1 because index 0 is the root folder name, which is `newRoot`.
+    for (let i = 1; i < parts.length; i++) {
+        const part = parts[i];
+        let nextNode = currentNode.children.find(
+            (child): child is PortletFolder => child.name === part && child.type === 'folder'
+        );
+
+        if (!nextNode) {
+            const newFolderPath = parts.slice(0, i + 1).join('/');
+            nextNode = {
+                id: newFolderPath,
+                name: part,
+                type: 'folder',
+                path: newFolderPath,
+                children: [],
+            };
+            currentNode.children.push(nextNode);
+        }
+        currentNode = nextNode;
+    }
+
+    // Add the file to the final folder, if it doesn't already exist
+    const fileExists = currentNode.children.some(child => child.name === fileName && child.type === 'file');
+    if (!fileExists) {
+         currentNode.children.push({
+            id: filePath,
+            name: fileName,
+            type: 'file',
+            path: filePath,
+            content: content,
+        });
+    }
+    
+    return newRoot;
+}
     
 
     
+
