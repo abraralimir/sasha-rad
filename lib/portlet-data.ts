@@ -191,6 +191,11 @@ const initJspContent = `<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefi
 <portlet:defineObjects />
 `;
 
+const mainCssContent = `/* Add your custom styles here */
+`;
+
+const languagePropertiesContent = `javax.portlet.title=My React Portlet
+`;
 
 const appJsContent = `import React from 'react';
 
@@ -304,6 +309,21 @@ export const initialProject: PortletFolder = {
                         path: `${rootPath}/src/main/resources`,
                         children: [
                             {
+                                id: `${rootPath}/src/main/resources/content`,
+                                name: 'content',
+                                type: 'folder',
+                                path: `${rootPath}/src/main/resources/content`,
+                                children: [
+                                    {
+                                        id: `${rootPath}/src/main/resources/content/Language.properties`,
+                                        name: 'Language.properties',
+                                        type: 'file',
+                                        path: `${rootPath}/src/main/resources/content/Language.properties`,
+                                        content: languagePropertiesContent,
+                                    },
+                                ]
+                            },
+                            {
                                 id: `${rootPath}/src/main/resources/META-INF`,
                                 name: 'META-INF',
                                 type: 'folder',
@@ -315,6 +335,21 @@ export const initialProject: PortletFolder = {
                                         type: 'folder',
                                         path: `${rootPath}/src/main/resources/META-INF/resources`,
                                         children: [
+                                            {
+                                                id: `${rootPath}/src/main/resources/META-INF/resources/css`,
+                                                name: 'css',
+                                                type: 'folder',
+                                                path: `${rootPath}/src/main/resources/META-INF/resources/css`,
+                                                children: [
+                                                    {
+                                                        id: `${rootPath}/src/main/resources/META-INF/resources/css/main.css`,
+                                                        name: 'main.css',
+                                                        type: 'file',
+                                                        path: `${rootPath}/src/main/resources/META-INF/resources/css/main.css`,
+                                                        content: mainCssContent,
+                                                    },
+                                                ]
+                                            },
                                             {
                                                 id: `${rootPath}/src/main/resources/META-INF/resources/js`,
                                                 name: 'js',
