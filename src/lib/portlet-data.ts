@@ -25,7 +25,25 @@ const buildGradleContent = `dependencies {
 	compileOnly group: "org.osgi", name: "osgi.cmpn"
     compileOnly group: "com.liferay.portlet.bridges", name: "com.liferay.portlet.bridges.mvc"
     compileOnly group: "org.osgi.service.component.annotations", name: "org.osgi.service.component.annotations"
-}`;
+
+    // JSP Taglib dependencies
+    compileOnly group: "com.liferay", name: "com.liferay.asset.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.comment.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.frontend.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.journal.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.layout.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.portlet.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.site.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.trash.taglib"
+    compileOnly group: "com.liferay", name: "com.liferay.wiki.taglib"
+}
+
+task npmBuild(type: Exec) {
+    commandLine 'npm', 'run', 'build'
+}
+
+jar.dependsOn(npmBuild)
+`;
 
 const bndBndContent = `Bundle-Name: My React Portlet
 Bundle-SymbolicName: com.example.my.reactportlet
@@ -57,11 +75,13 @@ const packageJsonContent = `{
     "@babel/preset-env": "^7.24.4",
     "@babel/preset-react": "^7.24.1",
     "babel-loader": "^9.1.3",
+    "liferay-npm-bundler": "^2.31.0",
+    "liferay-npm-scripts": "^31.0.0",
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
-    "build": "webpack --mode=production"
+    "build": "babel --source-maps -d build/resources/main/META-INF/resources/js src/main/resources/META-INF/resources/js && liferay-npm-bundler"
   }
 }`;
 
@@ -142,18 +162,42 @@ import org.osgi.service.component.annotations.Component;
 public class ReactPortlet extends MVCPortlet {
 }`;
 
-const indexHtmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My React Portlet</title>
-</head>
-<body>
-    <div id="root"></div>
-    <!-- The liferay-npm-bundler will automatically add the script tag during the build -->
-</body>
-</html>`;
+const viewJspContent = `<%@ include file="/init.jsp" %>
+
+<div id="<portlet:namespace />-root"></div>
+
+<liferay-frontend:require
+    modules="my-react-portlet@1.0.0/js/main"
+    onResolved="
+        Liferay.Loader.require('my-react-portlet@1.0.0/js/main').then(
+            main => {
+                main.default({
+                    portletElementId: '<portlet:namespace />-root'
+                });
+            }
+        )
+    "
+/>`;
+
+const initJspContent = `<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
+<%@ taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %>
+<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+<%@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
+<%@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %>
+
+<liferay-theme:defineObjects />
+<portlet:defineObjects />
+`;
+
+const mainCssContent = `#<portlet-namespace />-root {
+  min-height: 200px;
+}
+`;
+
+const languagePropertiesContent = `javax.portlet.title=My React Portlet
+`;
 
 const appJsContent = `import React from 'react';
 
@@ -255,6 +299,7 @@ export const initialProject: PortletFolder = {
                                             }
                                         ]
                                     }
+
                                 ]
                             }
                         ]
@@ -265,6 +310,21 @@ export const initialProject: PortletFolder = {
                         type: 'folder',
                         path: `${rootPath}/src/main/resources`,
                         children: [
+                            {
+                                id: `${rootPath}/src/main/resources/content`,
+                                name: 'content',
+                                type: 'folder',
+                                path: `${rootPath}/src/main/resources/content`,
+                                children: [
+                                    {
+                                        id: `${rootPath}/src/main/resources/content/Language.properties`,
+                                        name: 'Language.properties',
+                                        type: 'file',
+                                        path: `${rootPath}/src/main/resources/content/Language.properties`,
+                                        content: languagePropertiesContent,
+                                    },
+                                ]
+                            },
                             {
                                 id: `${rootPath}/src/main/resources/META-INF`,
                                 name: 'META-INF',
@@ -278,11 +338,19 @@ export const initialProject: PortletFolder = {
                                         path: `${rootPath}/src/main/resources/META-INF/resources`,
                                         children: [
                                             {
-                                                id: `${rootPath}/src/main/resources/META-INF/resources/index.html`,
-                                                name: 'index.html',
-                                                type: 'file',
-                                                path: `${rootPath}/src/main/resources/META-INF/resources/index.html`,
-                                                content: indexHtmlContent,
+                                                id: `${rootPath}/src/main/resources/META-INF/resources/css`,
+                                                name: 'css',
+                                                type: 'folder',
+                                                path: `${rootPath}/src/main/resources/META-INF/resources/css`,
+                                                children: [
+                                                    {
+                                                        id: `${rootPath}/src/main/resources/META-INF/resources/css/main.css`,
+                                                        name: 'main.css',
+                                                        type: 'file',
+                                                        path: `${rootPath}/src/main/resources/META-INF/resources/css/main.css`,
+                                                        content: mainCssContent,
+                                                    },
+                                                ]
                                             },
                                             {
                                                 id: `${rootPath}/src/main/resources/META-INF/resources/js`,
@@ -309,7 +377,22 @@ export const initialProject: PortletFolder = {
                                         ]
                                     }
                                 ]
-                            }
+                            },
+                            {
+                                id: `${rootPath}/src/main/resources/init.jsp`,
+                                name: 'init.jsp',
+                                type: 'file',
+                                path: `${rootPath}/src/main/resources/init.jsp`,
+                                content: initJspContent,
+                            },
+                            {
+                                id: `${rootPath}/src/main/resources/view.jsp`,
+                                name: 'view.jsp',
+                                type: 'file',
+                                path: `${rootPath}/src/main/resources/view.jsp`,
+                                content: viewJspContent,
+                            },
+
                         ]
                     },
                     {
@@ -395,4 +478,51 @@ export function updateFileContent(node: PortletFolder, id: string, content: stri
     return newProject;
 }
 
+export function addFileToTree(root: PortletFolder, filePath: string, content: string): PortletFolder {
+    const newRoot = JSON.parse(JSON.stringify(root)); // Deep copy to avoid mutation issues
+    const parts = filePath.split('/');
+    const fileName = parts.pop();
+    if (!fileName) return newRoot; // Invalid path
+
+    let currentNode: PortletFolder = newRoot;
+
+    // Traverse or create folders for the file's path
+    // Start from index 1 because index 0 is the root folder name, which is `newRoot`.
+    for (let i = 1; i < parts.length; i++) {
+        const part = parts[i];
+        let nextNode = currentNode.children.find(
+            (child): child is PortletFolder => child.name === part && child.type === 'folder'
+        );
+
+        if (!nextNode) {
+            const newFolderPath = parts.slice(0, i + 1).join('/');
+            nextNode = {
+                id: newFolderPath,
+                name: part,
+                type: 'folder',
+                path: newFolderPath,
+                children: [],
+            };
+            currentNode.children.push(nextNode);
+        }
+        currentNode = nextNode;
+    }
+
+    // Add the file to the final folder, if it doesn't already exist
+    const fileExists = currentNode.children.some(child => child.name === fileName && child.type === 'file');
+    if (!fileExists) {
+         currentNode.children.push({
+            id: filePath,
+            name: fileName,
+            type: 'file',
+            path: filePath,
+            content: content,
+        });
+    }
     
+    return newRoot;
+}
+    
+
+    
+

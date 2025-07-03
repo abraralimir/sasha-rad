@@ -1,10 +1,11 @@
 
+
 "use client";
 
 import * as React from "react";
 import { SidebarProvider, Sidebar, SidebarInset, SidebarHeader, SidebarContent, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { Card } from "@/components/ui/card";
-import { initialProject, PortletFolder, findFileById, updateFileContent } from "@/lib/portlet-data";
+import { initialProject, PortletFolder, findFileById, updateFileContent, addFileToTree } from "@/lib/portlet-data";
 import { FileExplorer } from "@/components/file-explorer";
 import { CodeEditor } from "@/components/code-editor";
 import { Chatbot, type Message } from "@/components/chatbot";
@@ -77,39 +78,22 @@ export default function Home() {
   };
 
   const handleSashaCodeUpdate = (filePath: string, newContent: string) => {
-    const fileId = filePath;
-    const fileExists = findFileById(project, fileId);
-    
-    let updatedProject: PortletFolder;
+    setProject(currentProject => {
+        const fileExists = findFileById(currentProject, filePath);
+        let updatedProject: PortletFolder;
 
-    if (fileExists) {
-        updatedProject = updateFileContent(project, fileId, newContent);
-    } else {
-        // This is a new file. We need to add it to the project structure.
-        // This is a simplified approach. A real implementation would be more robust.
-        const pathParts = filePath.split('/');
-        const fileName = pathParts.pop();
-        if (fileName) {
-            // A more robust solution would create the folder structure if it doesn't exist.
-            // For now, we'll assume a flat structure or that folders exist.
-            const newFile = { id: filePath, name: fileName, type: 'file' as const, path: filePath, content: newContent };
-            
-            const addFile = (folder: PortletFolder): PortletFolder => {
-                // A better implementation would traverse the path.
-                // This is a simplification for the demo.
-                if (filePath.startsWith(folder.path)) {
-                   return { ...folder, children: [...folder.children, newFile] };
-                }
-                return { ...folder, children: folder.children.map(c => c.type === 'folder' ? addFile(c) : c) };
-            };
-            updatedProject = addFile(project);
+        if (fileExists) {
+            // File exists, just update its content
+            updatedProject = updateFileContent(currentProject, filePath, newContent);
         } else {
-           updatedProject = project;
+            // File does not exist, create it (and any parent folders)
+            updatedProject = addFileToTree(currentProject, filePath, newContent);
         }
-    }
-    
-    setProject(updatedProject);
-    setActiveFileId(fileId);
+        return updatedProject;
+    });
+
+    // Set the newly created/updated file as active
+    setActiveFileId(filePath);
   };
   
   const findFirstFile = (folder: PortletFolder): string | null => {
